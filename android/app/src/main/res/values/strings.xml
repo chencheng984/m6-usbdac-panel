@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">M6 USB DAC</string>
+    <string name="a11y_label">M6 DAC 面板 · 采样率读取</string>
+    <string name="a11y_desc">读取山灵音乐播放页显示的格式、采样率、位深与码率，用于 USB DAC 面板实时显示。</string>
+    <string name="notif_channel">USB DAC 面板</string>
+    <string name="exiting">面板已退出</string>
+</resources>

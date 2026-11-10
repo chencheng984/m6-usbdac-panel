@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>M6 · USB DAC — UI 候选效果实验室</title>
+<link rel="stylesheet" href="lab.css">
+</head>
+<body>
+
+<div class="lab-head">
+  <div class="lab-kicker">M6 · USB DAC / UI Lab</div>
+  <h1>候选效果实验室 <em>— 4 个站点筛完，按本项目约束重写后长这样</em></h1>
+  <p>每个效果都标明来源站，并按目标环境重写过：640×360 横屏、深空黑 + 琥珀金、
+  Android 7.1.1 WebView（Chromium 51 能力基线）、零框架零依赖、不依赖 hover。
+  直接双击本文件即可预览，不需要起服务器。</p>
+  <div class="lab-note">
+    <b>结论先行：</b>React Bits 与 Aceternity UI 是 React + Tailwind + Framer Motion 组件，
+    <b>代码不能直接搬</b>（要 React 运行时和构建链，APK 会从 0.9 MB 涨到十几 MB），
+    但它们的<b>效果思路可以 1:1 用原生 CSS/SVG 重写</b>，单个成本几十行；
+    UIverse 是纯 CSS 片段，小件能直接抄；MotionSites 是灵感/prompt 库，只借布局与氛围。
+  </div>
+</div>
+
+<div class="hr"></div>
+
+<!-- ============================================================
+     区块 0 · 整机模拟
+     ============================================================ -->
+<div class="sechead">
+  <h2>零 · 组合起来是什么样</h2>
+  <span>640×360 整机模拟（.92 缩放）：入场序列 + 呼吸状态点 + 彗星环 + 流光描边</span>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;align-items:flex-start;margin-bottom:26px">
+  <div class="device-wrap">
+    <div class="device" id="device">
+      <div class="dv-topbar anim">
+        <div class="dv-brand">M6 <em>USB DAC</em></div>
+        <div class="dv-pill"><span class="dv-dot"></span>已连接</div>
+      </div>
+      <div class="dv-stage">
+        <div class="dv-card dv-params">
+          <div class="dv-rate"><b id="dvRate">96</b><i>kHz</i></div>
+          <div class="dv-meta">
+            <div><b>24</b><small>位深</small></div>
+            <div class="sep"></div>
+            <div><b class="wav">WAV</b><small>格式</small></div>
+            <div class="sep"></div>
+            <div><b>4608</b><small>码率 kbps</small></div>
+          </div>
+        </div>
+        <div class="dv-card dv-vol">
+          <svg viewBox="0 0 200 200" width="148" height="148" aria-hidden="true">
+            <circle cx="100" cy="100" r="86" style="fill:none;stroke:rgba(255,255,255,.06);stroke-width:8"></circle>
+            <circle cx="100" cy="100" r="86" id="dvArc" style="fill:none;stroke:rgba(201,162,39,.5);stroke-width:8;stroke-linecap:round;stroke-dasharray:540.35;transform:rotate(-90deg);transform-origin:100px 100px;stroke-dashoffset:378"></circle>
+            <circle cx="100" cy="100" r="86" id="dvTail" style="fill:none;stroke:#E8C766;stroke-width:8;stroke-linecap:round;stroke-dasharray:74 540.35;transform:rotate(-90deg);transform-origin:100px 100px;stroke-dashoffset:-88"></circle>
+            <circle id="dvHeadGlow" cx="100" cy="43.6" r="11" style="fill:#E8C766;opacity:.26"></circle>
+            <circle id="dvHead" cx="100" cy="43.6" r="4.5" style="fill:#FFF3D0"></circle>
+          </svg>
+          <div style="position:absolute;width:148px;height:148px;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+            <b style="font-size:34px;font-weight:400;line-height:38px" class="num">30</b>
+            <small style="font-size:8px;letter-spacing:2.6px;color:#5A6069">VOLUME</small>
+          </div>
+        </div>
+      </div>
+      <div class="dv-foot">
+        <div class="dv-track">test96 · Unknown Artist</div>
+        <div class="dv-src"><span class="dv-srctag">山灵界面</span></div>
+      </div>
+      <div class="dv-scan"></div>
+    </div>
+  </div>
+
+  <div style="flex:1;min-width:260px;margin-left:26px">
+    <p style="font-size:12px;line-height:1.8;color:#8A8F98">
+      这一段是「零新增信息、只加动效」的组合演示：<b style="color:#D9D4C8">顶栏下滑淡入 → 采样率上浮 →
+      三项参数错峰 → 音量环生长 → 底部信息收尾</b>，中间一道金色扫描线扫过。
+      全部是 CSS animation + 一次 SVG dashoffset 过渡，没有逐帧 JS。
+    </p>
+    <p style="font-size:11px;line-height:1.8;color:#5A6069;margin-top:10px">
+      注意：面板是 400ms 刷新的常驻悬浮窗，入场动画只在「面板弹出」时播一次，
+      不要挂在每次数据刷新上，否则会一直闪。
+    </p>
+    <div class="acts" style="margin-top:14px">
+      <button type="button" id="enterReplay">重播入场</button>
+      <button type="button" id="enterBurst">每 3 秒循环</button>
+    </div>
+  </div>
+</div>
+
+<div class="hr"></div>
+
+<!-- ============================================================
+     区块 1 · 动效候选
+     ============================================================ -->
+<div class="sechead">
+  <h2>一 · 候选动效（可交互）</h2>
+  <span>点击 / 拖动体验，每张卡都写了落点与代价</span>
+</div>
+
+<div class="grid">
+
+  <!-- 1 ------------------------------ -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">Aceternity · Text Flipping Board</span>
+      <div class="flap" id="flap">
+        <div class="digit" id="fd0"></div>
+        <div class="digit" id="fd1"></div>
+        <div class="digit" id="fd2"></div>
+        <span class="flap-unit">kHz</span>
+      </div>
+    </div>
+    <h3>Split-Flap 翻牌采样率</h3>
+    <div class="src">Aceternity UI · Text Flipping Board ／ React Bits · SplitFlapText</div>
+    <div class="desc">采样率切换时像机场翻牌机一样「咔」地翻过来，只翻变化的那一位，空位留成空白牌。</div>
+    <div class="cost">成本：约 40 行 JS + 30 行 CSS；只在数值变化时触发，静止零开销。</div>
+    <div class="acts">
+      <button type="button" data-flap="96">96</button>
+      <button type="button" data-flap="48">48</button>
+      <button type="button" data-flap="192">192</button>
+      <button type="button" data-flap="384">384</button>
+    </div>
+  </article>
+
+  <!-- 2 ------------------------------ -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">React Bits · Comet Dial</span>
+      <div class="dial-wrap" id="dialWrap">
+        <svg class="dial" viewBox="0 0 200 200" width="156" height="156" aria-hidden="true">
+          <circle class="dial-track" cx="100" cy="100" r="86"></circle>
+          <circle class="dial-ticks" cx="100" cy="100" r="76"></circle>
+          <circle class="dial-arc" id="dialArc" cx="100" cy="100" r="86"></circle>
+          <circle class="dial-tail" id="dialTail" cx="100" cy="100" r="86"></circle>
+          <circle class="dial-head-glow" id="dialGlow" cx="100" cy="14" r="11"></circle>
+          <circle class="dial-head" id="dialHead" cx="100" cy="14" r="4.5"></circle>
+        </svg>
+        <div class="dial-center">
+          <div class="dial-num" id="dialNum">42</div>
+          <div class="dial-lbl">VOLUME</div>
+        </div>
+      </div>
+    </div>
+    <h3>彗星拖尾音量环</h3>
+    <div class="src">React Bits · Comet Dial（angle-flick + comet head）</div>
+    <div class="desc">保留现有拖拽手感，把整段描边改成「暗金填充 + 末端亮金彗尾 + 光点」，外面加一圈刻度。</div>
+    <div class="cost">成本：SVG 多 3 个 circle，JS 每帧只写 3 个属性，骁龙 430 无压力。</div>
+    <div class="acts">
+      <button type="button" data-dial="-5">− 5</button>
+      <button type="button" data-dial="5">＋ 5</button>
+      <button type="button" data-dial="0">归零</button>
+    </div>
+  </article>
+
+  <!-- 3 ------------------------------ -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">React Bits · Counter</span>
+      <div class="odo" id="odo">
+        <div class="odo-col is-off" id="oc0"></div>
+        <div class="odo-col" id="oc1"></div>
+        <div class="odo-col" id="oc2"></div>
+        <span class="odo-unit">/ 100</span>
+      </div>
+    </div>
+    <h3>Odometer 滚轮数字</h3>
+    <div class="src">React Bits · Counter（odometer 数字滚动）</div>
+    <div class="desc">音量改成机械滚轮：个位翻满一圈十位才进一格，比直接跳数字更容易感知「变了多少」。</div>
+    <div class="cost">成本：每位一列 0–9，只改 translateY；纯 CSS 过渡，无逐帧 JS。</div>
+    <div class="acts">
+      <button type="button" data-odo="-5">− 5</button>
+      <button type="button" data-odo="5">＋ 5</button>
+      <button type="button" id="odoAuto">自动演示</button>
+    </div>
+  </article>
+
+  <!-- 4 ------------------------------ -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">Aceternity · Moving Border</span>
+      <div class="mb-card">
+        <svg class="mb-svg" viewBox="0 0 196 104" aria-hidden="true">
+          <defs>
+            <linearGradient id="mbGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#C9A227" stop-opacity="0"></stop>
+              <stop offset="50%" stop-color="#E8C766" stop-opacity="1"></stop>
+              <stop offset="100%" stop-color="#C9A227" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <rect class="mb-base" x="0.5" y="0.5" width="195" height="103" rx="13.5"></rect>
+          <rect class="mb-run" id="mbRun" x="0.5" y="0.5" width="195" height="103" rx="13.5"></rect>
+        </svg>
+        <div class="txt">SIGNAL LOCKED</div>
+        <div class="big num">96<span style="font-size:12px;color:#8A8F98"> kHz / 24 bit</span></div>
+      </div>
+    </div>
+    <h3>流光描边（仅连接态）</h3>
+    <div class="src">Aceternity UI · Moving Border ／ React Bits · Border Glow</div>
+    <div class="desc">一段金光沿卡片边框匀速跑。只在「已连接」时跑，断开或待机时静止——用动效本身表达链路状态。</div>
+    <div class="cost">成本：一个 SVG rect + 一条 stroke-dashoffset keyframes，限制在 1 个元素上即可。</div>
+    <div class="acts"><button type="button" id="mbToggle">暂停 / 播放</button></div>
+  </article>
+
+  <!-- 5 ------------------------------ -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">Aceternity · Card Spotlight</span>
+      <div class="spot-card" id="spotCard">
+        <div class="spot" id="spot"></div>
+        <div class="spot-rim" id="spotRim"></div>
+        <div class="txt">VOLUME</div>
+        <div class="big num">42<span style="font-size:12px;color:#8A8F98"> %</span></div>
+      </div>
+    </div>
+    <h3>按压聚光（触摸版 Spotlight）</h3>
+    <div class="src">Aceternity UI · Card Spotlight（hover → touch 改造）</div>
+    <div class="desc">原版是鼠标 hover 跟随；改成<b>手指按下才亮</b>，抬起淡出。径向渐变实现，不用 blur、不用 backdrop-filter。</div>
+    <div class="cost">成本：一个 div 改 left/top，无重绘洪水；按下给「已收到」的即时反馈。</div>
+    <div class="acts"><button type="button" id="spotDemo">模拟按下 400ms</button></div>
+  </article>
+
+  <!-- 6 ------------------------------ -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">UIverse · status pulse</span>
+      <div class="pills" id="pills">
+        <div class="pill on is-cur"><span class="dot"></span><span class="txt">已连接 · 96 kHz</span></div>
+        <div class="pill busy"><span class="dot"></span><span class="txt">正在写入音量…</span></div>
+        <div class="pill"><span class="dot"></span><span class="txt">未连接</span></div>
+      </div>
+    </div>
+    <h3>状态胶囊 + 呼吸扩散</h3>
+    <div class="src">UIverse 常见呼吸灯写法（纯 CSS）</div>
+    <div class="desc">绿点外两层同心圆扩散，一眼看出「链路活着」；写入音量时切琥珀闪烁，失败切红。UIverse 里少数能直接抄的类别。</div>
+    <div class="cost">成本：伪元素 scale 动画，零 JS。别再叠 3 层以上阴影，低端机扛不住。</div>
+    <div class="acts"><button type="button" id="pillBtn">高亮下一个状态</button></div>
+  </article>
+
+  <!-- 7 ------------------------------ -->
+  <article class="demo">
+    <div class="stage" style="height:196px">
+      <span class="tag">HUD · enter sequence</span>
+      <div class="device-wrap" style="width:269px;height:152px;border-radius:10px">
+        <div class="device" id="miniDevice" style="transform:scale(.42)">
+          <div class="dv-topbar">
+            <div class="dv-brand">M6 <em>USB DAC</em></div>
+            <div class="dv-pill"><span class="dv-dot"></span>已连接</div>
+          </div>
+          <div class="dv-stage">
+            <div class="dv-card dv-params">
+              <div class="dv-rate"><b>96</b><i>kHz</i></div>
+              <div class="dv-meta">
+                <div><b>24</b><small>位深</small></div>
+                <div class="sep"></div>
+                <div><b class="wav">WAV</b><small>格式</small></div>
+                <div class="sep"></div>
+                <div><b>4608</b><small>码率 kbps</small></div>
+              </div>
+            </div>
+            <div class="dv-card dv-vol">
+              <svg viewBox="0 0 200 200" width="148" height="148" aria-hidden="true">
+                <circle cx="100" cy="100" r="86" style="fill:none;stroke:rgba(255,255,255,.06);stroke-width:8"></circle>
+                <circle cx="100" cy="100" r="86" style="fill:none;stroke:rgba(201,162,39,.5);stroke-width:8;stroke-linecap:round;stroke-dasharray:540.35;transform:rotate(-90deg);transform-origin:100px 100px;stroke-dashoffset:378"></circle>
+                <circle cx="100" cy="100" r="86" style="fill:none;stroke:#E8C766;stroke-width:8;stroke-linecap:round;stroke-dasharray:74 540.35;transform:rotate(-90deg);transform-origin:100px 100px;stroke-dashoffset:-88"></circle>
+                <circle cx="100" cy="43.6" r="4.5" style="fill:#FFF3D0"></circle>
+              </svg>
+              <div style="position:absolute;width:148px;height:148px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <b style="font-size:34px;font-weight:400" class="num">30</b>
+                <small style="font-size:8px;letter-spacing:2.6px;color:#5A6069">VOLUME</small>
+              </div>
+            </div>
+          </div>
+          <div class="dv-foot">
+            <div class="dv-track">test96 · Unknown Artist</div>
+            <div class="dv-src"><span class="dv-srctag">山灵界面</span></div>
+          </div>
+          <div class="dv-scan"></div>
+        </div>
+      </div>
+    </div>
+    <h3>面板弹出入场序列</h3>
+    <div class="src">MotionSites · dashboard 布局节奏 ／ 自研编排</div>
+    <div class="desc">面板弹出时按「顶栏 → 大数字 → 参数 → 环 → 底栏」错峰 60–80ms 入位，加一道扫描线。只在弹出时播一次。</div>
+    <div class="cost">成本：7 条 CSS keyframes + animation-delay，零 JS 逐帧；总时长约 900ms。</div>
+    <div class="acts"><button type="button" id="miniReplay">重播</button></div>
+  </article>
+
+  <!-- 8 ------------------------------ -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">自研 · refresh pulse</span>
+      <div class="pulse-card" id="pulseCard">
+        <div class="flash"></div>
+        <div class="k">SAMPLE RATE</div>
+        <div class="v" id="pulseVal">96<span style="font-size:13px;color:#8A8F98"> kHz</span></div>
+        <div class="sub"><span class="pulse-dot"></span>400ms 刷新 · 仅值变化时闪</div>
+      </div>
+    </div>
+    <h3>数据刷新脉冲</h3>
+    <div class="src">自研（借鉴 Aceternity · Glowing Effect 的边缘光）</div>
+    <div class="desc">数值真的变了才闪一下边框金光；不变不闪。让「实时」这件事被看见，又不会 400ms 一直闪。</div>
+    <div class="cost">成本：一个 class 切换 + 620ms keyframes；必须做「值未变则不触发」判断。</div>
+    <div class="acts"><button type="button" id="pulseBtn">模拟一次刷新</button></div>
+  </article>
+
+  <!-- 9 ------------------------------ -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">Aceternity · marquee</span>
+      <div class="marq-stage">
+        <div class="marq">
+          <div class="marq-inner">
+            <span>Hotel California (2013 Remaster) · Eagles<i>FLAC 96kHz/24bit</i></span>
+            <span>Hotel California (2013 Remaster) · Eagles<i>FLAC 96kHz/24bit</i></span>
+          </div>
+        </div>
+        <div class="marq-note">长曲名自动循环滚动，短曲名静止</div>
+      </div>
+    </div>
+    <h3>曲目信息跑马灯</h3>
+    <div class="src">Aceternity UI · Logo Cloud Marquee（改造为单行文字）</div>
+    <div class="desc">曲名超长时无缝循环滚动。现在被省略号截断，换行读不到副标题。真机上线前要判断文本宽度，短名不要滚。</div>
+    <div class="cost">成本：一份复制文本 + translateX(-50%) 关键帧；用 JS 测宽决定是否挂动画。</div>
+    <div class="acts"><button type="button" id="marqToggle">暂停 / 播放</button></div>
+  </article>
+
+  <!-- 10 ----------------------------- -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">SVG · idle 状态</span>
+      <div class="usb-box">
+        <svg class="usb-float" viewBox="0 0 48 48" width="54" height="54" aria-hidden="true">
+          <g class="usb-line">
+            <path d="M24 8v24"></path>
+            <circle cx="24" cy="7" r="2.2" fill="currentColor" stroke="none"></circle>
+            <path d="M24 20l-7 5v4"></path>
+            <rect x="14" y="29" width="6" height="6" rx="1"></rect>
+            <path d="M24 26l7 4v5"></path>
+            <path d="M28.5 35h5l2 3-2 3h-5z"></path>
+          </g>
+          <path class="usb-flow" d="M24 8v24M24 20l-7 5v4M24 26l7 4v5"></path>
+        </svg>
+        <div class="usb-t"><b>未连接 USB</b><br>插件后自动弹出</div>
+      </div>
+    </div>
+    <h3>待机遮罩：图标浮动 + 描边流光</h3>
+    <div class="src">自研（借鉴 React Bits · Star Border 的描边流光）</div>
+    <div class="desc">断开时图标缓慢上下浮动，一段金光沿 USB 线描边循环。比现在的纯静态遮罩更「在等」，但完全不打扰。</div>
+    <div class="cost">成本：2 条 keyframes；注意别用 filter/drop-shadow 做发光，低端机会掉帧。</div>
+    <div class="acts"><button type="button" id="usbToggle">暂停 / 播放</button></div>
+  </article>
+
+  <!-- 11 ----------------------------- -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">material ripple · CSS</span>
+      <div class="rip-row">
+        <button class="rip-btn" type="button" id="ripDown">−</button>
+        <button class="rip-btn" type="button" id="ripUp">＋</button>
+      </div>
+    </div>
+    <h3>± 按钮按压 ripple</h3>
+    <div class="src">UIverse / Material 常见写法（纯 CSS + 一行 JS）</div>
+    <div class="desc">按下时从触点扩散一圈金光，配合原有的 scale(0.96) 回弹。音量步进这种高频操作，反馈越直接越好。</div>
+    <div class="cost">成本：约 8 行 JS 生成一个 span + 420ms 动画，动画结束即移除节点。</div>
+    <div class="acts"><button type="button" id="ripDemo">点一下两个按钮</button></div>
+  </article>
+
+  <!-- 12 ----------------------------- -->
+  <article class="demo">
+    <div class="stage">
+      <span class="tag">自研 · pending ring</span>
+      <div class="pend-wrap" id="pendWrap">
+        <div class="pend-core"><i></i></div>
+        <svg viewBox="0 0 150 150" width="150" height="150" style="position:absolute;left:0;top:0" aria-hidden="true">
+          <circle class="pend-ring" cx="75" cy="75" r="70"></circle>
+        </svg>
+        <div class="pend-num"><b class="num">42</b><small>VOLUME</small></div>
+      </div>
+    </div>
+    <h3>写入中状态环</h3>
+    <div class="src">自研（对应现有 volState = pending / fail）</div>
+    <div class="desc">请求写音量、等回读校验的这 1.2 秒里，外侧虚线环转起来；写入失败整环转红并抖动。现在只有颜色变淡，用户看不出在等。</div>
+    <div class="cost">成本：1 条 rotate keyframes + class 切换；失败态复用现有红描边。</div>
+    <div class="acts">
+      <button type="button" id="pendBtn">模拟写入（1.2s）</button>
+      <button type="button" id="pendFail">模拟失败</button>
+    </div>
+  </article>
+
+</div>
+
+<div class="hr"></div>
+
+<!-- ============================================================
+     区块 2 · 布局候选
+     ============================================================ -->
+<div class="sechead">
+  <h2>二 · 布局候选（640×360 缩略）</h2>
+  <span>按 MotionSites / Aceternity 的 dashboard 排版套路做的两个替代方案</span>
+</div>
+
+<div class="layouts">
+
+  <div class="mock-wrap">
+    <div class="mock">
+      <div class="mock-canvas">
+        <div class="ma-bar"><span>M6 · USB DAC</span><span>● 已连接</span></div>
+        <div class="ma-stage">
+          <div class="ma-card ma-left">
+            <div class="ma-num">96<span class="ma-minus">kHz</span></div>
+            <div class="ma-meta">
+              <div><div class="num">24</div><div class="ma-key">位深</div></div>
+              <div><div>WAV</div><div class="ma-key">格式</div></div>
+              <div><div class="num">4608</div><div class="ma-key">码率 kbps</div></div>
+            </div>
+          </div>
+          <div class="ma-card ma-right">
+            <div style="position:relative">
+              <div class="ma-ring"></div>
+              <div style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:34px" class="num">30</div>
+            </div>
+          </div>
+        </div>
+        <div class="ma-foot">test96 · Unknown Artist　　·　山灵界面</div>
+      </div>
+    </div>
+    <div class="mock-cap"><b>A · 现状</b><span>左参数 / 右音量环，信息一眼全收。布局不动，只换动效。</span></div>
+  </div>
+
+  <div class="mock-wrap">
+    <div class="mock">
+      <div class="mock-canvas">
+        <div class="mb-top"><span>USB DAC · 已连接</span><span>96 kHz / 24 bit / WAV</span></div>
+        <div class="mb-row2">
+          <div class="mb-main">
+            <div class="mb-huge">96<em>kHz</em></div>
+            <div class="mb-tags">
+              <div class="mb-tag">24 bit</div>
+              <div class="mb-tag">WAV</div>
+              <div class="mb-tag">4608 kbps</div>
+            </div>
+          </div>
+          <div class="mb-vbar">
+            <div class="mb-vnum num">30</div>
+            <div class="mb-track"><div class="mb-fill"></div></div>
+          </div>
+        </div>
+        <div class="mb-feet">test96 · Unknown Artist</div>
+      </div>
+    </div>
+    <div class="mock-cap"><b>B · HUD 双柱</b><span>采样率做成 96px 巨型数字，参数改胶囊标签，音量改竖条 —— 省掉圆环，横向更宽松。</span></div>
+  </div>
+
+  <div class="mock-wrap">
+    <div class="mock">
+      <div class="mock-canvas">
+        <div class="mc-wrap">
+          <div class="mc-half">
+            <div class="mc-big">96<em>kHz</em></div>
+            <div class="mc-lbl">SAMPLE RATE</div>
+          </div>
+          <div class="mc-half">
+            <div class="mc-big">42<em>%</em></div>
+            <div class="mc-lbl">VOLUME</div>
+          </div>
+        </div>
+        <div class="mc-foot"><span>24 bit · WAV · 4608 kbps　　test96 · Unknown Artist</span></div>
+      </div>
+    </div>
+    <div class="mock-cap"><b>C · 双主指标</b><span>采样率和音量各占半屏、同样字号，底部一条信息带。适合「只想扫一眼两个数」。</span></div>
+  </div>
+
+</div>
+
+<div class="foot">
+  约束备忘：所有效果都避开 <code>backdrop-filter</code>、<code>flex gap</code>、<code>:has()</code>、<code>aspect-ratio</code>、
+  <code>conic-gradient</code>、CSS 嵌套与 ES2020+ 语法（目标 WebView ≈ Chromium 51）。
+  本页不参与面板界面，仅本地预览；确认采纳后再把对应片段搬进 <code>web/css/*</code> 与 <code>web/js/ui/*</code>。
+</div>
+
+<script src="lab.js"></script>
+</body>
+</html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>M6 · USB DAC — KNOB 风格设计稿</title>
+<style>
+/* ============================================================
+   KNOB 风格横屏设计稿（640×360）
+   参照：KNOB 设计美学 / 旋钮交互
+   语言：纯黑底 + 橙红单色 + 大圆角胶囊 + 竖直渐变条 + 旋钮指针
+   约束：仍按 Chromium 51 可落地编写（无 gap / 无 backdrop-filter）
+   ============================================================ */
+:root{
+  --k-bg:#050505; --k-card:#101014; --k-card-2:#17171B;
+  --k-accent:#FF5A1F; --k-accent-l:#FF8A4C; --k-accent-soft:rgba(255,90,31,.12);
+  --k-text:#F5F2EE; --k-muted:#8A8A8F; --k-dim:#5A5A60;
+  --k-line:rgba(255,255,255,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  background:#0A0A0B; color:var(--k-text);
+  font:14px/1.4 -apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
+  padding:28px 24px 60px;
+}
+a{color:var(--k-accent-l)}
+.num{font-variant-numeric:tabular-nums}
+.hr{height:1px;background:rgba(255,255,255,.07);margin:30px 0 20px}
+.lab-kicker{font-size:10px;letter-spacing:2.4px;color:var(--k-accent);text-transform:uppercase}
+h1{font-size:22px;font-weight:600;margin-top:8px;letter-spacing:.2px}
+h1 em{font-style:normal;color:var(--k-accent-l)}
+.lead{margin-top:10px;font-size:12.5px;line-height:1.85;color:var(--k-muted);max-width:900px}
+.lead b{color:#D8D4CE;font-weight:500}
+.sechead{display:flex;align-items:baseline;margin-bottom:14px}
+.sechead h2{font-size:15px;font-weight:600;letter-spacing:.3px}
+.sechead span{margin-left:10px;font-size:11px;color:var(--k-dim)}
+
+/* ============================================================
+   面板本体 640×360
+   ============================================================ */
+.kpanel{
+  position:relative;width:640px;height:360px;overflow:hidden;
+  background:var(--k-bg);display:flex;flex-direction:column;
+}
+.kpanel-stage{
+  display:inline-block;width:755px;height:425px;overflow:hidden;
+  border-radius:22px;box-shadow:0 30px 90px rgba(0,0,0,.75);
+}
+.kpanel-stage .kpanel{transform:scale(1.18);transform-origin:0 0}
+
+/* 顶栏 */
+.k-top{height:40px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.k-brand{font-size:15px;font-weight:600;letter-spacing:.4px}
+.k-brand span{font-size:9.5px;letter-spacing:2px;color:var(--k-dim);margin-left:7px;font-weight:500}
+.k-link{
+  display:flex;align-items:center;height:22px;padding:0 10px;border-radius:11px;
+  border:1px solid rgba(255,90,31,.45);background:var(--k-accent-soft);
+  font-size:9.5px;letter-spacing:.4px;color:#FFB49A;
+}
+.k-link i{position:relative;width:5px;height:5px;border-radius:50%;background:var(--k-accent);margin-right:6px}
+.k-link i::after{
+  content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+  border-radius:50%;border:1px solid rgba(255,90,31,.65);
+  animation:kPulse 2.4s ease-out infinite;
+}
+@keyframes kPulse{0%{transform:scale(1);opacity:.9}70%,100%{transform:scale(3.6);opacity:0}}
+
+/* 主体 */
+.k-body{flex:1 1 auto;display:flex;padding:2px 22px 0;min-height:0}
+
+/* 左：竖直音量旋钮（音量区在左，参数在右） */
+.k-right{
+  flex:0 0 176px;width:176px;display:flex;flex-direction:column;align-items:center;
+  padding-top:4px;
+}
+/* 右：采样率 + 参数列表 */
+.k-left{flex:1 1 auto;min-width:0;margin-left:26px}
+.k-rate{display:flex;align-items:baseline;height:104px}
+.k-rate b{
+  font-size:94px;font-weight:650;letter-spacing:-5px;line-height:104px;
+  font-variant-numeric:tabular-nums;color:var(--k-text);
+  transition:transform 180ms cubic-bezier(.2,.8,.3,1),color 180ms ease;
+}
+.k-rate em{font-style:normal;font-size:15px;color:var(--k-dim);margin-left:9px;letter-spacing:.5px}
+.kpanel.is-drag .k-rate b{transform:scale(1.02);color:#FFF}
+.k-list{margin-top:6px}
+.k-row{display:flex;align-items:baseline;height:44px}
+.k-key{width:52px;font-size:10.5px;letter-spacing:1.2px;color:var(--k-dim);flex:0 0 52px}
+.k-val{font-size:20px;font-weight:500;color:var(--k-text);font-variant-numeric:tabular-nums}
+
+/* 竖直音量旋钮的轨道 */
+.k-rail{position:relative;width:60px;height:186px;touch-action:none;cursor:pointer}
+.k-track{
+  position:absolute;left:0;top:0;width:60px;height:186px;border-radius:26px;
+  background:var(--k-card);overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+  transition:box-shadow 160ms ease;
+}
+.kpanel.is-drag .k-track{
+  box-shadow:inset 0 0 0 1px rgba(255,90,31,.5),0 0 26px rgba(255,90,31,.26);
+}
+/* 刻度：极淡的横线 */
+.k-ticks{
+  position:absolute;left:0;top:0;width:60px;height:186px;border-radius:26px;pointer-events:none;
+  background-image:repeating-linear-gradient(180deg,rgba(255,255,255,.055) 0 1px,transparent 1px 18.6px);
+  opacity:.9;
+}
+.k-fill{
+  position:absolute;left:0;right:0;bottom:0;height:46%;
+  background:linear-gradient(180deg,var(--k-accent-l) 0%,var(--k-accent) 100%);
+  border-radius:12px 12px 26px 26px;
+  transition:height 140ms ease,filter 160ms ease;
+}
+.kpanel.is-drag .k-fill{filter:brightness(1.08)}
+.k-knob{
+  position:absolute;left:50%;width:26px;height:26px;margin-left:-13px;top:114px;
+  border-radius:50%;background:var(--k-text);z-index:3;
+  box-shadow:0 2px 10px rgba(0,0,0,.55);
+  transition:top 120ms linear,transform 160ms cubic-bezier(.2,.8,.3,1),box-shadow 160ms ease;
+}
+.k-knob i{
+  position:absolute;left:50%;top:50%;width:2.5px;height:11px;margin:-5.5px 0 0 -1.25px;
+  background:var(--k-accent);border-radius:1.5px;transform-origin:50% 100%;
+  transform:translateY(-1px) rotate(0deg);
+  transition:transform 120ms linear;
+}
+.kpanel.is-drag .k-knob{
+  transform:scale(1.16);
+  box-shadow:0 0 0 4px rgba(255,90,31,.22),0 2px 12px rgba(0,0,0,.6);
+}
+.k-vol{margin-top:9px;display:flex;align-items:center;height:34px}
+.k-vol b{
+  font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;
+  transition:transform 160ms cubic-bezier(.2,.8,.3,1),color 160ms ease;
+}
+.kpanel.is-drag .k-vol b{transform:scale(1.08);color:#FFF}
+.k-vol small{font-size:8px;letter-spacing:2.2px;color:var(--k-dim);margin-left:7px}
+
+/* 底部 */
+.k-foot{
+  height:40px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;
+}
+.k-track-text{font-size:11.5px;color:var(--k-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:430px}
+.k-src{
+  font-size:9px;letter-spacing:.4px;color:var(--k-accent);
+  border:1px solid rgba(255,90,31,.3);background:rgba(255,90,31,.07);
+  padding:1px 7px;border-radius:8px;white-space:nowrap;
+}
+
+/* 断开遮罩 */
+.k-overlay{
+  position:absolute;left:0;top:0;right:0;bottom:0;background:var(--k-bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9;
+}
+.k-overlay .k-ov-icon{color:var(--k-dim);margin-bottom:12px;animation:kFloat 3.4s ease-in-out infinite}
+@keyframes kFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.k-overlay b{font-size:15px;font-weight:500;letter-spacing:.4px}
+.k-overlay p{font-size:11.5px;color:var(--k-muted);margin-top:6px;text-align:center;line-height:1.7}
+.k-overlay .k-ov-btn{
+  margin-top:14px;height:30px;padding:0 18px;border-radius:15px;
+  border:1px solid rgba(255,90,31,.5);background:rgba(255,90,31,.1);
+  color:#FFB49A;font:inherit;font-size:11px;letter-spacing:.4px;cursor:pointer;
+}
+
+/* ============================================================
+   演示控制
+   ============================================================ */
+.ctrls{display:flex;flex-wrap:wrap;margin-top:16px}
+.ctrls button{
+  height:30px;padding:0 12px;margin:0 8px 8px 0;border-radius:15px;
+  border:1px solid rgba(255,255,255,.1);background:#17171B;color:var(--k-text);
+  font:inherit;font-size:11.5px;cursor:pointer;
+}
+.ctrls button:active{background:#212126}
+
+/* ============================================================
+   状态序列（对应参考图 I–V）
+   ============================================================ */
+.frames{display:flex;flex-wrap:wrap;margin-right:-18px}
+.frame{width:285px;margin:0 18px 18px 0}
+.frame-stage{
+  width:269px;height:152px;overflow:hidden;border-radius:12px;background:#000;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);
+}
+.frame-stage .kpanel{transform:scale(.42);transform-origin:0 0}
+/* 帧缩略：音量在左、参数在右，与主面板一致 */
+.frame .k-right{order:1}
+.frame .k-left{order:2}
+.frame-cap{margin-top:9px;font-size:12px;color:var(--k-text)}
+.frame-cap b{color:var(--k-accent-l);font-weight:600;margin-right:6px}
+.frame-cap span{display:block;font-size:10.5px;color:var(--k-dim);line-height:1.65;margin-top:3px}
+
+/* ============================================================
+   规范
+   ============================================================ */
+.spec{display:flex;flex-wrap:wrap;margin-right:-18px}
+.spec-card{
+  width:285px;margin:0 18px 18px 0;padding:14px 16px;border-radius:14px;
+  background:#111114;border:1px solid rgba(255,255,255,.06);
+}
+.spec-card h3{font-size:12px;font-weight:600;letter-spacing:.4px;margin-bottom:11px;color:#D8D4CE}
+.spec-row{display:flex;align-items:center;margin-bottom:9px}
+.spec-row:last-child{margin-bottom:0}
+.sw{width:20px;height:20px;border-radius:6px;margin-right:10px;flex:0 0 20px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.spec-name{font-size:11.5px;color:var(--k-text);flex:0 0 96px}
+.spec-val{font-size:10.5px;color:var(--k-dim);font-family:ui-monospace,Consolas,monospace}
+.spec-line{display:flex;justify-content:space-between;font-size:11.5px;color:var(--k-muted);margin-bottom:8px}
+.spec-line b{color:var(--k-text);font-weight:500}
+.spec-line:last-child{margin-bottom:0}
+
+.foot{margin-top:28px;font-size:11px;line-height:1.95;color:var(--k-dim);max-width:900px}
+.foot code{color:var(--k-muted);font-family:ui-monospace,Consolas,monospace;font-size:10.5px}
+</style>
+</head>
+<body>
+
+<div class="lab-kicker">M6 · USB DAC / KNOB Style</div>
+<h1>KNOB 风格设计稿 <em>— 纯黑 + 橙红 + 竖直渐变条 + 旋钮指针</em></h1>
+<p class="lead">
+  参照那张 KNOB 交互设计图的语言，把面板横屏化到 640×360：
+  <b>纯黑底不承载任何卡片边框</b>，所有层级靠字重与留白；唯一的强调色是橙红；
+  音量从「圆环」改成 <b>竖直渐变条 + 旋钮</b>——条的形状就是音量本身（对应参考图 III→IV 的
+  「条随倒计时缩短」），旋钮是把手也是当前值指针（对应参考图 I→II 的旋钮图标转动）。
+</p>
+
+<div class="hr"></div>
+
+<div class="sechead">
+  <h2>一 · 可交互面板</h2>
+  <span>直接在竖条上上下拖动 / 点旋钮；放大 1.18 显示</span>
+</div>
+
+<div class="kpanel-stage">
+  <div class="kpanel" id="panel">
+    <div class="k-top">
+      <div class="k-brand">M6 <span>USB DAC</span></div>
+      <div class="k-link" id="kLink"><i></i><span id="kLinkText">已连接</span></div>
+    </div>
+
+    <div class="k-body">
+      <div class="k-right">
+        <div class="k-rail" id="kRail">
+          <div class="k-track">
+            <div class="k-fill" id="kFill"></div>
+            <div class="k-ticks"></div>
+          </div>
+          <div class="k-knob" id="kKnob"><i id="kNeedle"></i></div>
+        </div>
+        <div class="k-vol"><b id="kVol">46</b><small>VOLUME</small></div>
+      </div>
+
+      <div class="k-left">
+        <div class="k-rate"><b id="kRate">96</b><em>kHz</em></div>
+        <div class="k-list">
+          <div class="k-row"><span class="k-key">位深</span><span class="k-val" id="kBits">24 bit</span></div>
+          <div class="k-row"><span class="k-key">格式</span><span class="k-val" id="kFmt">WAV</span></div>
+          <div class="k-row"><span class="k-key">码率</span><span class="k-val" id="kKbps">4608 kbps</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="k-foot">
+      <div class="k-track-text" id="kTrackText">test96 · Unknown Artist</div>
+      <div class="k-src" id="kSrc">山灵界面</div>
+    </div>
+
+    <div class="k-overlay" id="kOverlay" style="display:none">
+      <svg class="k-ov-icon" viewBox="0 0 48 48" width="42" height="42" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M24 6v26"></path>
+          <circle cx="24" cy="5" r="2.4" fill="currentColor" stroke="none"></circle>
+          <path d="M24 18l-7 5v4"></path>
+          <rect x="14" y="27" width="6" height="6" rx="1"></rect>
+          <path d="M24 24l7 4v5"></path>
+          <path d="M28.5 33h5l2 3-2 3h-5z"></path>
+        </g>
+      </svg>
+      <b>未连接 USB</b>
+      <p>用数据线连接电脑，并在快捷菜单选择「USB DAC」</p>
+      <button class="k-ov-btn" type="button" id="kReconnect">重新检测</button>
+    </div>
+  </div>
+</div>
+
+<div class="ctrls">
+  <button type="button" id="cDemo">自动演示音量变化</button>
+  <button type="button" id="cRate">切换采样率 44.1 / 96 / 192</button>
+  <button type="button" id="cOff">切换断开态</button>
+</div>
+
+<div class="hr"></div>
+
+<div class="sechead">
+  <h2>二 · 状态序列</h2>
+  <span>对应参考图的 I–IV 帧：状态靠形态与颜色表达，不靠额外文字</span>
+</div>
+
+<div class="frames">
+
+  <div class="frame">
+    <div class="frame-stage">
+      <div class="kpanel">
+        <div class="k-top">
+          <div class="k-brand">M6 <span>USB DAC</span></div>
+          <div class="k-link" style="border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#8A8A8F">
+            <i style="background:#5A5A60"></i><span>连接中</span>
+          </div>
+        </div>
+        <div class="k-body">
+          <div class="k-left">
+            <div class="k-rate"><b style="color:#3A3A40">--</b><em>kHz</em></div>
+            <div class="k-list">
+              <div class="k-row"><span class="k-key">位深</span><span class="k-val" style="color:#3A3A40">--</span></div>
+              <div class="k-row"><span class="k-key">格式</span><span class="k-val" style="color:#3A3A40">--</span></div>
+              <div class="k-row"><span class="k-key">码率</span><span class="k-val" style="color:#3A3A40">--</span></div>
+            </div>
+          </div>
+          <div class="k-right">
+            <div class="k-rail">
+              <div class="k-track"><div class="k-fill" style="height:0%"></div><div class="k-ticks"></div></div>
+              <div class="k-knob" style="top:173px"><i></i></div>
+            </div>
+            <div class="k-vol"><b style="color:#3A3A40">--</b><small>VOLUME</small></div>
+          </div>
+        </div>
+        <div class="k-foot"><div class="k-track-text" style="color:#3A3A40">等待 USB 音频流</div></div>
+      </div>
+    </div>
+    <div class="frame-cap"><b>I</b>连接中<span>空态：旋钮沉在轨道底部，一切压到最暗，不撒谎显示假数值。</span></div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-stage">
+      <div class="kpanel">
+        <div class="k-top">
+          <div class="k-brand">M6 <span>USB DAC</span></div>
+          <div class="k-link"><i></i><span>已连接</span></div>
+        </div>
+        <div class="k-body">
+          <div class="k-left">
+            <div class="k-rate"><b>96</b><em>kHz</em></div>
+            <div class="k-list">
+              <div class="k-row"><span class="k-key">位深</span><span class="k-val">24 bit</span></div>
+              <div class="k-row"><span class="k-key">格式</span><span class="k-val">WAV</span></div>
+              <div class="k-row"><span class="k-key">码率</span><span class="k-val">4608 kbps</span></div>
+            </div>
+          </div>
+          <div class="k-right">
+            <div class="k-rail">
+              <div class="k-track"><div class="k-fill" style="height:46%"></div><div class="k-ticks"></div></div>
+              <div class="k-knob" style="top:87px"><i style="transform:translateY(-1px) rotate(166deg)"></i></div>
+            </div>
+            <div class="k-vol"><b>46</b><small>VOLUME</small></div>
+          </div>
+        </div>
+        <div class="k-foot"><div class="k-track-text">test96 · Unknown Artist</div><div class="k-src">山灵界面</div></div>
+      </div>
+    </div>
+    <div class="frame-cap"><b>II</b>正常播放<span>橙红只出现在三处：状态点、渐变条、数据源角标。其余全是灰白。</span></div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-stage">
+      <div class="kpanel is-drag">
+        <div class="k-top">
+          <div class="k-brand">M6 <span>USB DAC</span></div>
+          <div class="k-link"><i></i><span>已连接</span></div>
+        </div>
+        <div class="k-body">
+          <div class="k-left">
+            <div class="k-rate"><b>96</b><em>kHz</em></div>
+            <div class="k-list">
+              <div class="k-row"><span class="k-key">位深</span><span class="k-val">24 bit</span></div>
+              <div class="k-row"><span class="k-key">格式</span><span class="k-val">WAV</span></div>
+              <div class="k-row"><span class="k-key">码率</span><span class="k-val">4608 kbps</span></div>
+            </div>
+          </div>
+          <div class="k-right">
+            <div class="k-rail">
+              <div class="k-track"><div class="k-fill" style="height:72%"></div><div class="k-ticks"></div></div>
+              <div class="k-knob" style="top:44px"><i style="transform:translateY(-1px) rotate(259deg)"></i></div>
+            </div>
+            <div class="k-vol"><b>72</b><small>VOLUME</small></div>
+          </div>
+        </div>
+        <div class="k-foot"><div class="k-track-text">test96 · Unknown Artist</div><div class="k-src">山灵界面</div></div>
+      </div>
+    </div>
+    <div class="frame-cap"><b>III</b>正在调节<span>旋钮放大发光、条变亮、数字提亮——三个地方同时响应，手在哪儿一眼可见。</span></div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-stage">
+      <div class="kpanel">
+        <div class="k-top">
+          <div class="k-brand">M6 <span>USB DAC</span></div>
+          <div class="k-link" style="border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#8A8A8F">
+            <i style="background:#5A5A60"></i><span>未连接</span>
+          </div>
+        </div>
+        <div class="k-body">
+          <div class="k-left">
+            <div class="k-rate"><b style="color:#3A3A40">--</b><em>kHz</em></div>
+            <div class="k-list">
+              <div class="k-row"><span class="k-key">位深</span><span class="k-val" style="color:#3A3A40">--</span></div>
+              <div class="k-row"><span class="k-key">格式</span><span class="k-val" style="color:#3A3A40">--</span></div>
+              <div class="k-row"><span class="k-key">码率</span><span class="k-val" style="color:#3A3A40">--</span></div>
+            </div>
+          </div>
+          <div class="k-right">
+            <div class="k-rail">
+              <div class="k-track"><div class="k-fill" style="height:0%"></div><div class="k-ticks"></div></div>
+              <div class="k-knob" style="top:173px"><i></i></div>
+            </div>
+            <div class="k-vol"><b style="color:#3A3A40">--</b><small>VOLUME</small></div>
+          </div>
+        </div>
+        <div class="k-foot"><div class="k-track-text" style="color:#3A3A40">未检测到曲目信息</div></div>
+        <div class="k-overlay">
+          <svg viewBox="0 0 48 48" width="34" height="34" style="color:#5A5A60;margin-bottom:8px" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M24 6v26"></path>
+              <circle cx="24" cy="5" r="2.4" fill="currentColor" stroke="none"></circle>
+              <path d="M24 18l-7 5v4"></path>
+              <rect x="14" y="27" width="6" height="6" rx="1"></rect>
+              <path d="M24 24l7 4v5"></path>
+              <path d="M28.5 33h5l2 3-2 3h-5z"></path>
+            </g>
+          </svg>
+          <b style="font-size:13px">未连接 USB</b>
+          <button class="k-ov-btn" type="button" style="margin-top:10px;height:26px;font-size:10px">重新检测</button>
+        </div>
+      </div>
+    </div>
+    <div class="frame-cap"><b>IV</b>断开<span>遮罩沿用同一套形：图标浮动、一个描边胶囊按钮，不引入新颜色。</span></div>
+  </div>
+
+</div>
+
+<div class="hr"></div>
+
+<div class="sechead">
+  <h2>三 · 设计规范</h2>
+  <span>落地时直接替换 web/css/base.css 的 token 即可</span>
+</div>
+
+<div class="spec">
+
+  <div class="spec-card">
+    <h3>色彩（只有一个强调色）</h3>
+    <div class="spec-row"><span class="sw" style="background:#050505"></span><span class="spec-name">底</span><span class="spec-val">#050505</span></div>
+    <div class="spec-row"><span class="sw" style="background:#101014"></span><span class="spec-name">控件底</span><span class="spec-val">#101014</span></div>
+    <div class="spec-row"><span class="sw" style="background:#FF5A1F"></span><span class="spec-name">强调</span><span class="spec-val">#FF5A1F</span></div>
+    <div class="spec-row"><span class="sw" style="background:#FF8A4C"></span><span class="spec-name">强调·亮</span><span class="spec-val">#FF8A4C</span></div>
+    <div class="spec-row"><span class="sw" style="background:#F5F2EE"></span><span class="spec-name">主文字</span><span class="spec-val">#F5F2EE</span></div>
+    <div class="spec-row"><span class="sw" style="background:#8A8A8F"></span><span class="spec-name">次要文字</span><span class="spec-val">#8A8A8F</span></div>
+    <div class="spec-row"><span class="sw" style="background:#5A5A60"></span><span class="spec-name">标签</span><span class="spec-val">#5A5A60</span></div>
+  </div>
+
+  <div class="spec-card">
+    <h3>形状与字号</h3>
+    <div class="spec-line"><span>音量轨道</span><b>60 × 186，圆角 26</b></div>
+    <div class="spec-line"><span>视觉填充</span><b>上 12 / 下 26 圆角</b></div>
+    <div class="spec-line"><span>旋钮</span><b>Ø26 白色 + 橙指针</b></div>
+    <div class="spec-line"><span>采样率</span><b>94px / 650 / -5</b></div>
+    <div class="spec-line"><span>参数值</span><b>20px / 500</b></div>
+    <div class="spec-line"><span>参数标签</span><b>10.5px / 1.2 字距</b></div>
+    <div class="spec-line"><span>状态胶囊</span><b>高 22，圆角 11</b></div>
+    <div class="spec-line"><span>按钮</span><b>56 × 28，圆角 14</b></div>
+  </div>
+
+  <div class="spec-card">
+    <h3>动效时长</h3>
+    <div class="spec-line"><span>条的升降</span><b>140 ms ease</b></div>
+    <div class="spec-line"><span>旋钮位移</span><b>120 ms linear</b></div>
+    <div class="spec-line"><span>旋钮放大</span><b>160 ms 回弹</b></div>
+    <div class="spec-line"><span>数字提亮</span><b>160–180 ms</b></div>
+    <div class="spec-line"><span>状态点脉冲</span><b>2.4 s 无限</b></div>
+    <div class="spec-line"><span>按钮按压</span><b>90 ms / 120 ms</b></div>
+  </div>
+
+</div>
+
+<div class="foot">
+  落地清单：<code>web/css/base.css</code> 把 <code>--gold/#C9A227</code> 换成 <code>--accent/#FF5A1F</code>；
+  <code>web/index.html</code> 把 <code>.ring-wrap</code> 换成 <code>.k-rail</code> 结构（轨道 + 填充 + 旋钮）；
+  <code>web/css/components.css</code> 音量区整体替换，<code>circle</code> 相关样式删除；
+  <code>web/js/ui/volume.js</code> 拖拽从「角度」改成「纵向比例」，其余（乐观更新、回读校验、失败回滚）逻辑不动。
+  技术上仍全部落在 Chromium 51 支持范围内，无新增依赖。
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var TRACK_H = 186;
+  var KNOB_H = 26;
+
+  var panel = document.getElementById('panel');
+  var rail = document.getElementById('kRail');
+  var fill = document.getElementById('kFill');
+  var knob = document.getElementById('kKnob');
+  var needle = document.getElementById('kNeedle');
+  var volText = document.getElementById('kVol');
+  var rateText = document.getElementById('kRate');
+  var bitsText = document.getElementById('kBits');
+  var fmtText = document.getElementById('kFmt');
+  var kbpsText = document.getElementById('kKbps');
+  var linkText = document.getElementById('kLinkText');
+  var linkEl = document.getElementById('kLink');
+  var overlay = document.getElementById('kOverlay');
+  var srcTag = document.getElementById('kSrc');
+  var trackText = document.getElementById('kTrackText');
+
+  var vol = 46;
+  var connected = true;
+  var dragging = false;
+
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+
+  function renderVol() {
+    var f = clamp(vol, 0, 100) / 100;
+    fill.style.height = (f * 100) + '%';
+    // 旋钮中心对齐填充顶端
+    var center = TRACK_H * (1 - f);
+    knob.style.top = (center - KNOB_H / 2) + 'px';
+    needle.style.transform = 'translateY(-1px) rotate(' + Math.round(f * 360) + 'deg)';
+    volText.textContent = connected ? String(Math.round(vol)) : '--';
+  }
+
+  function setDragging(on) {
+    if (on === dragging) return;
+    dragging = on;
+    panel.className = 'kpanel' + (on ? ' is-drag' : '');
+  }
+
+  function volFromEvent(clientY) {
+    var rect = rail.getBoundingClientRect();
+    var y = clientY - rect.top;
+    var f = 1 - y / rect.height;
+    return Math.round(clamp(f, 0, 1) * 100);
+  }
+
+  function onDown(e) {
+    if (!connected) return;
+    e.preventDefault && e.preventDefault();
+    setDragging(true);
+    var p = e.touches ? e.touches[0] : e;
+    vol = volFromEvent(p.clientY);
+    renderVol();
+    e.preventDefault && e.preventDefault();
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    var p = e.touches ? e.touches[0] : e;
+    vol = volFromEvent(p.clientY);
+    renderVol();
+    e.preventDefault && e.preventDefault();
+  }
+  function onUp() { setDragging(false); }
+
+  if (window.PointerEvent) {
+    rail.addEventListener('pointerdown', onDown, false);
+    window.addEventListener('pointermove', onMove, false);
+    window.addEventListener('pointerup', onUp, false);
+  } else {
+    rail.addEventListener('touchstart', onDown, false);
+    window.addEventListener('touchmove', onMove, false);
+    window.addEventListener('touchend', onUp, false);
+    rail.addEventListener('mousedown', function (e) {
+      onDown(e);
+      window.addEventListener('mousemove', onMove, false);
+      window.addEventListener('mouseup', onUp, false);
+    }, false);
+  }
+
+  function fire(btn, dir) {
+    if (!connected) return;
+    vol = clamp(vol + dir, 0, 100);
+    renderVol();
+    if (btn) {
+      btn.classList.add('is-fire');
+      setTimeout(function () { btn.classList.remove('is-fire'); }, 220);
+    }
+  }
+
+  /* ---- 演示：自动调音量 ---- */
+  var demoTimer = null;
+  document.getElementById('cDemo').addEventListener('click', function () {
+    if (demoTimer) {
+      clearInterval(demoTimer);
+      demoTimer = null;
+      setDragging(false);
+      this.textContent = '自动演示音量变化';
+      return;
+    }
+    this.textContent = '停止演示';
+    var seq = [72, 24, 58, 88, 46];
+    var i = 0;
+    setDragging(true);
+    vol = seq[0];
+    renderVol();
+    demoTimer = setInterval(function () {
+      i = (i + 1) % seq.length;
+      vol = seq[i];
+      renderVol();
+    }, 1100);
+  }, false);
+
+  /* ---- 演示：切换采样率 ---- */
+  var rates = [
+    { r: '44.1', b: '16 bit', f: 'FLAC', k: '1411 kbps' },
+    { r: '96', b: '24 bit', f: 'WAV', k: '4608 kbps' },
+    { r: '192', b: '24 bit', f: 'FLAC', k: '9216 kbps' }
+  ];
+  var rateIdx = 1;
+  document.getElementById('cRate').addEventListener('click', function () {
+    rateIdx = (rateIdx + 1) % rates.length;
+    var it = rates[rateIdx];
+    if (!connected) return;
+    rateText.textContent = it.r;
+    bitsText.textContent = it.b;
+    fmtText.textContent = it.f;
+    kbpsText.textContent = it.k;
+  }, false);
+
+  /* ---- 演示：断开 / 重连 ---- */
+  function setConnected(on) {
+    connected = on;
+    overlay.style.display = on ? 'none' : 'flex';
+    linkEl.style.borderColor = on ? 'rgba(255,90,31,.45)' : 'rgba(255,255,255,.12)';
+    linkEl.style.background = on ? 'rgba(255,90,31,.12)' : 'rgba(255,255,255,.03)';
+    linkEl.style.color = on ? '#FFB49A' : '#8A8A8F';
+    linkEl.querySelector('i').style.background = on ? '#FF5A1F' : '#5A5A60';
+    linkText.textContent = on ? '已连接' : '未连接';
+    rateText.textContent = on ? '96' : '--';
+    bitsText.textContent = on ? '24 bit' : '--';
+    fmtText.textContent = on ? 'WAV' : '--';
+    kbpsText.textContent = on ? '4608 kbps' : '--';
+    srcTag.textContent = on ? '山灵界面' : '无数据源';
+    trackText.textContent = on ? 'test96 · Unknown Artist' : '未检测到曲目信息';
+    if (!on) { setDragging(false); vol = 0; }
+    renderVol();
+  }
+
+  document.getElementById('cOff').addEventListener('click', function () {
+    setConnected(!connected);
+    this.textContent = connected ? '切换断开态' : '切回连接态';
+  }, false);
+
+  document.getElementById('kReconnect').addEventListener('click', function () {
+    setConnected(true);
+  }, false);
+
+  renderVol();
+})();
+</script>
+</body>
+</html>

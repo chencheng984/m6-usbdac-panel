@@ -1,0 +1,28 @@
+<resources>
+    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0B0C0E</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:colorAccent">#C9A227</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <!--
+      关键：面板用透明主题，系统只会让下方的山灵界面 onPause 而不是 onStop，
+      山灵窗口因而保留在 WindowManager 中，无障碍服务才能持续读到采样率。
+      观感上仍是不透明面板——由 WebView 自身的不透明背景负责。
+    -->
+    <style name="AppTheme.Translucent" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:colorAccent">#C9A227</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+</resources>

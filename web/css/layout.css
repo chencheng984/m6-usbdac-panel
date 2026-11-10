@@ -1,0 +1,192 @@
+/* layout.css — 640x360 landscape base canvas (device 1280x720 @ dpr2) */
+
+.viewport {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.app {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 640px;
+  height: 360px;
+  margin: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform-origin: 50% 50%;
+}
+
+/* 背景：石材纹理（img 层，样式内联在 index.html）+ 半透明遮罩层，
+ * 两层都 pointer-events:none，不吃触摸事件。 */
+
+/* 内容层压在背景之上 */
+.topbar,
+.stage,
+.footer {
+  position: relative;
+  z-index: 2;
+}
+
+/* desktop preview framing (set by JS when scaled down) */
+.app.is-framed {
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 26px 80px rgba(0, 0, 0, 0.85);
+}
+
+/* --- top bar --- */
+.topbar {
+  height: 44px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar-title {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+}
+
+/* SONY 字标（图片，透明底白字，高 15px） */
+.brand-logo {
+  display: block;
+  height: 15px;
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.btn-exit {
+  margin-left: 10px;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 11px;
+  border: 1px solid var(--line-2);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.4px;
+}
+
+.btn-exit:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* --- stage: left params / right volume --- */
+.stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 14px 20px 0 20px;
+  display: flex;
+  flex-direction: row;
+}
+
+/* --- footer --- */
+.footer {
+  flex: 0 0 auto;
+  height: 30px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+}
+
+.src-line {
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+
+.hint {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--dim);
+}
+
+/* ---------- entrance sequence (只在启动时播一次) ----------
+ * 全部挂在 body.is-entering 上：类被移除后元素回到正常状态。
+ * 反过来，如果 JS 没加上这个类，面板也照常显示，不会白屏。
+ */
+body.is-entering .topbar {
+  animation: enterIn 420ms ease both;
+}
+body.is-entering .params {
+  animation: enterFade 500ms ease 60ms both;
+}
+body.is-entering .rate-num {
+  animation: enterRate 560ms cubic-bezier(0.2, 0.8, 0.3, 1) 90ms both;
+}
+body.is-entering .meta-cell,
+body.is-entering .meta-div {
+  animation: enterIn 400ms ease 270ms both;
+}
+body.is-entering .volume {
+  animation: enterFade 500ms ease 120ms both;
+}
+body.is-entering .vol-rail {
+  animation: enterPop 620ms cubic-bezier(0.2, 0.8, 0.3, 1) 180ms both;
+}
+body.is-entering .footer {
+  animation: enterIn 420ms ease 460ms both;
+}
+body.is-entering .app::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  z-index: 25;
+  background: linear-gradient(90deg, rgba(232, 199, 102, 0), rgba(232, 199, 102, 0.75), rgba(232, 199, 102, 0));
+  animation: enterScan 900ms ease 40ms both;
+}
+
+@keyframes enterIn {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes enterFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes enterRate {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes enterPop {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes enterScan {
+  0%   { top: 0; opacity: 0; }
+  12%  { opacity: 0.85; }
+  100% { top: 360px; opacity: 0; }
+}
+
+/* 减少动态偏好：入场只保留「出现」，不做位移与缩放 */
+@media (prefers-reduced-motion: reduce) {
+  body.is-entering .topbar,
+  body.is-entering .params,
+  body.is-entering .rate-num,
+  body.is-entering .meta-cell,
+  body.is-entering .meta-div,
+  body.is-entering .volume,
+  body.is-entering .vol-rail,
+  body.is-entering .footer {
+    animation: none;
+  }
+  body.is-entering .app::after {
+    display: none;
+  }
+}

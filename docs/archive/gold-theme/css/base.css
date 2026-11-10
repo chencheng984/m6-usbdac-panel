@@ -1,0 +1,66 @@
+/* base.css — reset + design tokens (Chromium 51 compatible) */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #050506;
+  color: #EDEAE3;
+  font-family: -apple-system, "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  --bg:        #0B0C0E;
+  --bg-2:      #0E1013;
+  --card:      #14161A;
+  --card-2:    #1A1D22;
+  --gold:      #C9A227;
+  --gold-l:    #E8C766;
+  --text:      #EDEAE3;
+  --muted:     #8A8F98;
+  --dim:       #5A6069;
+  --green:     #35C56B;
+  --amber:     #E0A33A;
+  --red:       #E5484D;
+  --line:      rgba(255, 255, 255, 0.07);
+  --line-2:    rgba(255, 255, 255, 0.12);
+  --radius:    20px;
+  --radius-sm: 12px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* tabular numerals where supported (Chromium 52+); harmless fallback below */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}

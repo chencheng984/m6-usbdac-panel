@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no,email=no,address=no">
+<meta name="color-scheme" content="dark">
+<title>M6 · USB DAC</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<div id="viewport" class="viewport">
+  <div id="app" class="app">
+
+    <header class="topbar">
+      <div class="topbar-title">
+        <span class="brand">M6</span>
+        <span class="brand-sub">USB DAC</span>
+      </div>
+      <div class="topbar-right">
+        <div id="linkPill" class="pill pill--off">
+          <span class="pill-dot"></span>
+          <span id="linkText" class="pill-text">未连接</span>
+        </div>
+        <button id="btnExit" class="btn-exit hidden" type="button" aria-label="退出">退出</button>
+      </div>
+    </header>
+
+    <main class="stage">
+
+      <section id="paramsCard" class="card params">
+        <div class="rate-line">
+          <span id="rateNum" class="rate-num">--</span>
+          <span id="rateUnit" class="rate-unit">kHz</span>
+        </div>
+        <div class="meta-row">
+          <div class="meta-cell">
+            <div id="bitsVal" class="meta-val">--</div>
+            <div class="meta-key">位深</div>
+          </div>
+          <div class="meta-div"></div>
+          <div class="meta-cell">
+            <div id="formatVal" class="meta-val">--</div>
+            <div class="meta-key">格式</div>
+          </div>
+          <div class="meta-div"></div>
+          <div class="meta-cell">
+            <div id="kbpsVal" class="meta-val">--</div>
+            <div class="meta-key">码率 kbps</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="volumeCard" class="card volume">
+        <div id="ringWrap" class="ring-wrap">
+          <svg class="ring" viewBox="0 0 200 200" width="168" height="168" aria-hidden="true">
+            <circle class="ring-bg" cx="100" cy="100" r="86"></circle>
+            <circle id="ringFg" class="ring-fg" cx="100" cy="100" r="86"></circle>
+            <circle class="ring-pend" cx="100" cy="100" r="96"></circle>
+            <circle id="ringGlow" class="ring-head-glow" cx="100" cy="14" r="11"></circle>
+            <circle id="ringHead" class="ring-head" cx="100" cy="14" r="4.5"></circle>
+          </svg>
+          <div class="ring-center">
+            <div id="volNum" class="vol-num">--</div>
+            <div class="vol-label">VOLUME</div>
+          </div>
+        </div>
+        <div class="steps">
+          <button id="volDown" class="btn-step" type="button" aria-label="音量减">−</button>
+          <button id="volUp" class="btn-step" type="button" aria-label="音量加">＋</button>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <div id="trackLine" class="track">未检测到曲目信息</div>
+      <div class="src-line">
+        <span id="srcTag" class="src-tag src-tag--none">无数据源</span>
+        <span id="hint" class="hint"></span>
+      </div>
+    </footer>
+
+    <div id="overlay" class="overlay">
+      <div class="overlay-inner">
+        <svg class="usb-icon" viewBox="0 0 48 48" width="46" height="46" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M24 6v26"></path>
+            <circle cx="24" cy="5" r="2.4" fill="currentColor" stroke="none"></circle>
+            <path d="M24 18l-7 5v4"></path>
+            <rect x="14" y="27" width="6" height="6" rx="1"></rect>
+            <path d="M24 24l7 4v5"></path>
+            <path d="M28.5 33h5l2 3-2 3h-5z"></path>
+            <path d="M17 6v4M31 6v4"></path>
+          </g>
+          <path class="usb-flow" d="M24 6v26M24 18l-7 5v4M24 24l7 4v5"></path>
+        </svg>
+        <div class="ov-text">
+          <div class="ov-title">未连接 USB</div>
+          <div class="ov-desc">请用数据线把 M6 连接到电脑，并在快捷菜单选择「USB DAC」模式。</div>
+        </div>
+        <button id="recheck" class="btn-recheck" type="button">重新检测</button>
+      </div>
+    </div>
+
+    <div id="banner" class="banner">
+      <span id="bannerText"></span>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/sources/mock.js"></script>
+<script src="js/sources/bridge.js"></script>
+<script src="js/ui/topbar.js"></script>
+<script src="js/ui/params.js"></script>
+<script src="js/ui/volume.js"></script>
+<script src="js/ui/footer.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

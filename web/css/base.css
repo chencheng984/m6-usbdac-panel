@@ -1,0 +1,81 @@
+/* base.css — reset + design tokens
+ * 主题：KNOB（纯黑底 + 橙红单色 + 大圆角胶囊）
+ * 兼容：Chromium 51（Android 7.1.1 WebView）
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #050505;
+  color: #F5F2EE;
+  /* 安卓原生中文字体：思源黑体（Source Han Sans / Noto Sans CJK） */
+  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "思源黑体", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  /* 背景层级：纯黑打底，控件靠极浅的灰区分，不靠边框 */
+  --bg:        #050505;
+  --bg-2:      #0A0A0B;
+  --card:      #101014;
+  --card-2:    #17171B;
+
+  /* 唯一强调色：橙红 */
+  --accent:    #FF5A1F;
+  --accent-l:  #FF8A4C;
+  /* 旧变量名保留，避免大面积改名 */
+  --gold:      #FF5A1F;
+  --gold-l:    #FF8A4C;
+
+  --text:      #F5F2EE;
+  --muted:     #8A8A8F;
+  --dim:       #5A5A60;
+
+  /* 状态色也收敛到橙/红两支 */
+  --green:     #FF5A1F;
+  --amber:     #FF8A4C;
+  --red:       #E5484D;
+
+  --line:      rgba(255, 255, 255, 0.06);
+  --line-2:    rgba(255, 255, 255, 0.10);
+
+  --radius:    28px;
+  --radius-sm: 14px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* tabular numerals where supported (Chromium 52+); harmless fallback below */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}

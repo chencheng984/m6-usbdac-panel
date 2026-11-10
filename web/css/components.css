@@ -1,0 +1,549 @@
+/* components.css — KNOB 主题（640×360 横屏）
+ * 纯黑底 + 橙红单色 + 大圆角胶囊 + 竖直音量条（轨道 / 填充 / 旋钮）
+ * 兼容 Chromium 51：无 backdrop-filter / 无 flex gap / 无 :has()
+ */
+
+/* ---------- status pill ---------- */
+.pill {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 11px;
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pill-dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dim);
+  margin-right: 6px;
+}
+
+.pill-text {
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+
+/* 已连接：橙红单色语言里，状态点就是唯一的高亮信号 */
+.pill--on {
+  border-color: rgba(255, 90, 31, 0.45);
+  background: rgba(255, 90, 31, 0.10);
+}
+.pill--on .pill-dot {
+  background: var(--accent);
+}
+.pill--on .pill-dot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 90, 31, 0.6);
+  animation: dotRipple 2.4s ease-out infinite;
+}
+.pill--on .pill-text {
+  color: #FFC7B0;
+}
+
+@keyframes dotRipple {
+  0%        { transform: scale(1);   opacity: 0.9; }
+  70%, 100% { transform: scale(3.6); opacity: 0; }
+}
+
+.pill--busy .pill-dot {
+  background: var(--amber);
+  animation: blink 1s step-end infinite;
+}
+.pill--busy .pill-text {
+  color: #FFD9C4;
+}
+
+.pill--warn {
+  border-color: rgba(255, 138, 76, 0.4);
+  background: rgba(255, 138, 76, 0.10);
+}
+.pill--warn .pill-dot {
+  background: var(--amber);
+}
+.pill--warn .pill-text {
+  color: #FFD9C4;
+}
+
+@keyframes blink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0.25; }
+}
+
+/* ---------- cards ---------- */
+/* 深色半透明卡：让底层石材纹理隐约透出，但远低于内容对比度 */
+.card {
+  background: rgba(26, 27, 32, 0.90);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 28px;
+}
+
+/* ---------- params (left) ---------- */
+.params {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 16px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* 数值真的变化时闪一次边框橙光（params.js 控制，值未变不触发） */
+.params.is-pulse {
+  animation: pulseEdge 620ms ease both;
+}
+@keyframes pulseEdge {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 90, 31, 0); }
+  22%  { box-shadow: 0 0 0 1px rgba(255, 90, 31, 0.75), 0 0 20px 1px rgba(255, 90, 31, 0.20); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 90, 31, 0); }
+}
+
+.rate-line {
+  display: flex;
+  align-items: baseline;
+  height: 86px;
+}
+
+/* 采样率：KNOB 风格的重量级数字，靠字重与负字距撑起来 */
+.rate-num {
+  font-size: 78px;
+  font-weight: 600;
+  letter-spacing: -4px;
+  line-height: 86px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  transition: opacity 180ms ease;
+}
+
+.rate-unit {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 8px;
+  letter-spacing: 0.3px;
+}
+
+.rate-num.is-empty {
+  color: var(--dim);
+}
+
+/* 长采样率（44.1 / 352.8 / 2822.4）降字号，避免撑出卡片 */
+.rate-num.is-long {
+  font-size: 58px;
+  letter-spacing: -2.5px;
+}
+
+.rate-num.is-xlong {
+  font-size: 46px;
+  letter-spacing: -2px;
+}
+
+.meta-row {
+  margin-top: 16px;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+}
+
+.meta-cell {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.meta-div {
+  width: 1px;
+  background: var(--line);
+  margin: 1px 0;
+}
+
+.meta-val {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text);
+  height: 24px;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.meta-key {
+  margin-top: 4px;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   volume (right) —— 竖直音量条 + 旋钮
+   轨道形状即音量：填充高度 = 音量百分比
+   比例：轨道 72×176（约 1:2.4），圆角 30 与卡片 28 同心
+   ============================================================ */
+.volume {
+  flex: 0 0 176px;
+  width: 176px;
+  margin-right: 14px;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.vol-rail {
+  position: relative;
+  width: 72px;
+  height: 176px;
+  touch-action: none;
+  cursor: pointer;
+}
+
+.vol-track {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 72px;
+  height: 176px;
+  border-radius: 30px;
+  background: var(--card-2);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: box-shadow 160ms ease;
+}
+
+.volume.is-dragging .vol-track {
+  box-shadow: inset 0 0 0 1px rgba(255, 90, 31, 0.5), 0 0 26px rgba(255, 90, 31, 0.26);
+}
+
+.vol-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0%;
+  background: linear-gradient(180deg, var(--accent-l) 0%, var(--accent) 100%);
+  border-radius: 14px 14px 30px 30px;
+  transition: height 140ms ease, filter 160ms ease;
+}
+/* 拖动中必须 1:1 跟手：去掉高度过渡，任何滞后都会让条「粘不住」手指 */
+.volume.is-dragging .vol-fill {
+  transition: filter 160ms ease;
+  filter: brightness(1.08);
+}
+
+/* 刻度：极淡的横线，只在轨道空着的部分露出来 */
+.vol-ticks {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 72px;
+  height: 176px;
+  border-radius: 30px;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.055) 0px,
+    rgba(255, 255, 255, 0.055) 1px,
+    rgba(255, 255, 255, 0) 1px,
+    rgba(255, 255, 255, 0) 16px
+  );
+}
+
+.vol-knob {
+  position: absolute;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  top: 148px;
+  border-radius: 50%;
+  background: var(--text);
+  z-index: 3;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+  /* --over：拖出轨道时的橡皮筋偏移，由 volume.js 逐帧写入 */
+  transition: top 120ms linear, transform 160ms cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 160ms ease;
+}
+
+.vol-knob i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2.5px;
+  height: 11px;
+  margin: -5.5px 0 0 -1.25px;
+  background: var(--accent);
+  border-radius: 1.5px;
+  transform-origin: 50% 100%;
+  transform: translateY(-1px) rotate(0deg);
+  transition: transform 120ms linear;
+}
+
+/* 拖动的视觉状态：放大 + 更强光晕；
+ * 位置（top）在拖动中不做过渡，只有「按下放大」这层做动画，保证 1:1 跟手。
+ * translateY(--over) 是出界时的橡皮筋位移。 */
+.volume.is-dragging .vol-knob {
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 160ms ease;
+  transform: translateY(var(--over, 0px)) scale(1.18);
+  box-shadow:
+    0 0 0 5px rgba(255, 90, 31, 0.26),
+    0 0 24px rgba(255, 90, 31, 0.55),
+    0 2px 14px rgba(0, 0, 0, 0.65);
+}
+/* 拖动时整条亮度再抬一档，形成「点亮」的联动 */
+.volume.is-dragging .vol-track {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 90, 31, 0.55),
+    0 0 30px rgba(255, 90, 31, 0.3);
+}
+
+/* 松手确认：写入成功时旋钮「落定」一下（commit 反馈，不是装饰） */
+.volume.is-committed .vol-knob {
+  animation: knobCommit 340ms cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+@keyframes knobCommit {
+  0%   { transform: scale(1.16); }
+  45%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+.volume.is-committed .vol-num {
+  animation: numCommit 300ms ease;
+}
+@keyframes numCommit {
+  0%   { color: #FFD9C4; }
+  100% { color: var(--text); }
+}
+
+/* 写入中：轨道描边呼吸 */
+.volume.is-busy .vol-track {
+  animation: trackBreath 1.1s ease-in-out infinite;
+}
+@keyframes trackBreath {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(255, 90, 31, 0.45); }
+  50%      { box-shadow: inset 0 0 0 1px rgba(255, 90, 31, 0.95), 0 0 14px rgba(255, 90, 31, 0.22); }
+}
+
+/* 写入失败：条转红并抖一下 */
+.volume.is-fail .vol-track {
+  box-shadow: inset 0 0 0 1px rgba(229, 72, 77, 0.8);
+  animation: railShake 320ms ease;
+}
+.volume.is-fail .vol-fill {
+  background: linear-gradient(180deg, #F07175 0%, var(--red) 100%);
+}
+@keyframes railShake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-2px); }
+  75%      { transform: translateX(2px); }
+}
+
+.vol-readout {
+  margin-top: 14px;
+  display: flex;
+  align-items: baseline;
+  height: 34px;
+}
+
+.vol-num {
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 34px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.3, 1), color 160ms ease;
+}
+
+.volume.is-dragging .vol-num {
+  transform: scale(1.08);
+  color: #FFF;
+}
+
+.vol-num.is-empty {
+  color: var(--dim);
+}
+
+/* ---------- source tag ---------- */
+.src-tag {
+  display: inline-block;
+  height: 17px;
+  padding: 0 7px;
+  border-radius: 9px;
+  font-size: 9px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+}
+
+.src-tag--alsa {
+  color: #FFC7B0;
+  border-color: rgba(255, 90, 31, 0.35);
+  background: rgba(255, 90, 31, 0.10);
+}
+
+.src-tag--a11y {
+  color: #FFC7B0;
+  border-color: rgba(255, 90, 31, 0.32);
+  background: rgba(255, 90, 31, 0.08);
+}
+
+.src-tag--mock {
+  color: #FFD9C4;
+  border-color: rgba(255, 138, 76, 0.35);
+  background: rgba(255, 138, 76, 0.10);
+}
+
+.src-tag--none {
+  color: var(--muted);
+}
+
+/* ---------- disconnected overlay (horizontal) ---------- */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.overlay-inner {
+  width: 520px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.usb-icon {
+  color: var(--dim);
+  flex: 0 0 auto;
+  margin-right: 22px;
+  animation: usbFloat 3.4s ease-in-out infinite;
+}
+.usb-icon .usb-flow {
+  fill: none;
+  stroke: var(--accent-l);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 26 120;
+  opacity: 0.8;
+  animation: usbFlow 2.8s linear infinite;
+}
+@keyframes usbFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+@keyframes usbFlow {
+  from { stroke-dashoffset: 146; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.ov-text {
+  flex: 1 1 auto;
+  text-align: left;
+  min-width: 0;
+}
+
+.ov-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.4px;
+}
+
+.ov-desc {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.btn-recheck {
+  flex: 0 0 auto;
+  margin-left: 20px;
+  height: 34px;
+  padding: 0 20px;
+  border-radius: 17px;
+  border: 1px solid rgba(255, 90, 31, 0.5);
+  background: rgba(255, 90, 31, 0.10);
+  color: #FFC7B0;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.btn-recheck:active {
+  background: rgba(255, 90, 31, 0.22);
+}
+
+/* ---------- top banner ---------- */
+.banner {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  padding: 6px 20px;
+  background: rgba(255, 138, 76, 0.14);
+  border-bottom: 1px solid rgba(255, 138, 76, 0.26);
+  font-size: 11px;
+  line-height: 15px;
+  color: #FFD9C4;
+  text-align: center;
+}
+
+.banner.is-error {
+  background: rgba(229, 72, 77, 0.14);
+  border-bottom-color: rgba(229, 72, 77, 0.30);
+  color: #F5B5B7;
+}
+
+/* ---------- 减少动态偏好 ----------
+ * 不砍掉反馈，只把会引起前庭反应的部分降级为静态/淡入。
+ * Chromium 51 不认识这条媒体查询，会整体忽略（无害）。
+ */
+@media (prefers-reduced-motion: reduce) {
+  .pill--on .pill-dot::after,
+  .usb-icon,
+  .usb-icon .usb-flow,
+  .volume.is-busy .vol-track,
+  .volume.is-committed .vol-knob,
+  .volume.is-committed .vol-num,
+  .volume.is-fail .vol-track {
+    animation: none;
+  }
+  .vol-fill,
+  .vol-knob,
+  .vol-num {
+    transition: none;
+  }
+}
+
+/* 减少透明度偏好：卡片压成实色，保证可读性 */
+@media (prefers-reduced-transparency: reduce) {
+  .card {
+    background: #101014;
+  }
+}
