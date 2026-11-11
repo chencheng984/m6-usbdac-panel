@@ -30,6 +30,8 @@
   var lastFail = false;
   var lastDragging = false;
   var lastOver = '0px';
+  var knobBase = RAIL_H - KNOB;   // 音量 0 时旋钮的 y 偏移
+  var overOffset = 0;             // 橡皮筋额外位移
   var awaitingCommit = false;
   var committed = false;
   var commitTimer = null;
@@ -52,6 +54,17 @@
     if (volNum.className !== cls) volNum.className = cls;
   }
 
+  /* 触觉反馈：只在「抓住」和「落定」两个时刻各给一次极短振动。
+   * 没有 VIBRATE 权限或设备不支持时静默失败。 */
+  function haptic(ms) {
+    try {
+      if (global.navigator && global.navigator.vibrate) {
+        global.navigator.vibrate(ms);
+      }
+    } catch (e) {
+    }
+  }
+
   function clearCommit() {
     if (commitTimer) {
       clearTimeout(commitTimer);
@@ -68,6 +81,7 @@
   function commitPulse() {
     if (committed) return;
     committed = true;
+    haptic(14);
     syncCard();
     commitTimer = setTimeout(function () {
       commitTimer = null;
@@ -83,6 +97,13 @@
     syncCard();
   }
 
+  /* 橡皮筋位移合并进同一个 --knob-y：CSS 里不必写 calc(var()+var())，
+   * 老内核（Chromium 51）也不会有兼容风险。 */
+  function applyKnobY() {
+    var y = knobBase + overOffset;
+    knob.style.setProperty('--knob-y', y.toFixed(1) + 'px');
+  }
+
   /* 橡皮筋：越界越远，位移渐近 OVER_MAX，不会无限跟出去 */
   function setOver(px) {
     var off = 0;
@@ -95,10 +116,13 @@
     var txt = off.toFixed(1) + 'px';
     if (txt === lastOver) return;
     lastOver = txt;
-    knob.style.setProperty('--over', txt);
+    overOffset = off;
+    applyKnobY();
   }
 
-  /* 条形填充高度 = 音量比例；旋钮中心对齐填充顶端 */
+  /* 条形填充高度 = 音量比例；旋钮中心对齐填充顶端。
+   * 旋钮位置走 transform（--knob-y）而不是 top：拖动时每帧只触发合成，
+   * 不做布局重排，低端机上更跟手。 */
   function setBar(fraction) {
     if (fraction < 0) fraction = 0;
     if (fraction > 1) fraction = 1;
@@ -111,7 +135,8 @@
     var center = RAIL_H * (1 - fraction);
     if (center < KNOB / 2) center = KNOB / 2;
     if (center > RAIL_H - KNOB / 2) center = RAIL_H - KNOB / 2;
-    knob.style.top = (center - KNOB / 2) + 'px';
+    knobBase = center - KNOB / 2;
+    applyKnobY();
 
     needle.style.transform = 'translateY(-1px) rotate(' + Math.round(fraction * 360) + 'deg)';
   }
@@ -200,11 +225,18 @@
 
   function onDown(e) {
     if (!state || !state.caps || !state.caps.volume) return;
-    // 不再要求 link === connected：面板已经弹出来就允许调音量，
-    // 否则 DACC 模式下读数还没到时会「完全拖不动」。
+
+    var p = e.touches ? e.touches[0] : e;
+    // 热区扩展到整张卡，但垂直方向仍只认轨道范围：
+    // 数字区域在轨道下方，若也算进来的话点数字会把音量直接点到 0。
+    var rect = rail.getBoundingClientRect();
+    if (p.clientY < rect.top - 10 || p.clientY > rect.bottom + 10) {
+      return;
+    }
+
     dragging = true;
     setDragging(true);
-    var p = e.touches ? e.touches[0] : e;
+    haptic(8);
     applyPointer(p.clientY);
     if (e.preventDefault) e.preventDefault();
   }
@@ -236,19 +268,21 @@
     }
   }
 
+  var hitArea = document.getElementById('volumeCard') || rail;
+
   if (global.PointerEvent) {
-    rail.addEventListener('pointerdown', onDown, false);
+    hitArea.addEventListener('pointerdown', onDown, false);
     // 移动/松手绑在 window 上：手指划出条外也能继续跟随，不会卡住
     global.addEventListener('pointermove', onMove, false);
     global.addEventListener('pointerup', onUp, false);
     global.addEventListener('pointercancel', onUp, false);
   } else {
-    rail.addEventListener('touchstart', onDown, false);
+    hitArea.addEventListener('touchstart', onDown, false);
     // passive:false —— 拖动时要 preventDefault，避免系统把它当成滚动/下拉手势
     global.addEventListener('touchmove', onMove, { passive: false });
     global.addEventListener('touchend', onUp, false);
     global.addEventListener('touchcancel', onUp, false);
-    rail.addEventListener('mousedown', function (e) {
+    hitArea.addEventListener('mousedown', function (e) {
       onDown(e);
       if (global.document.addEventListener) {
         global.document.addEventListener('mousemove', onMove, false);

@@ -1,0 +1,85 @@
+﻿--------- beginning of main
+--------- beginning of system
+09-25 17:48:04.539 D/DacPanel( 2992): native touch a=0 274,141
+09-25 17:48:04.625 D/DacPanel( 2992): [console] touch 137,70 on vol-track
+09-25 17:48:04.653 D/DacPanel( 2992): native touch a=2 292,157
+09-25 17:48:04.670 D/DacPanel( 2992): native touch a=2 305,164
+09-25 17:48:04.685 D/DacPanel( 2992): native touch a=2 317,168
+09-25 17:48:04.700 D/DacPanel( 2992): native touch a=2 328,174
+09-25 17:48:04.716 D/DacPanel( 2992): native touch a=2 340,177
+09-25 17:48:05.189 D/DacPanel( 2992): native touch a=2 404,195
+09-25 17:48:05.198 D/DacPanel( 2992): native touch a=1 404,195
+09-25 17:48:05.264 D/DacPanel( 2992): native touch a=0 208,199
+09-25 17:48:05.318 D/DacPanel( 2992): [console] touch 104,99 on volFill
+09-25 17:48:05.342 D/DacPanel( 2992): native touch a=2 235,202
+09-25 17:48:05.353 D/DacPanel( 2992): native touch a=2 251,205
+09-25 17:48:05.369 D/DacPanel( 2992): native touch a=2 267,208
+09-25 17:48:05.391 D/DacPanel( 2992): native touch a=2 283,211
+09-25 17:48:05.521 D/DacPanel( 2992): native touch a=2 348,218
+09-25 17:48:05.542 D/DacPanel( 2992): native touch a=2 350,219
+09-25 17:48:05.599 D/DacPanel( 2992): native touch a=2 360,220
+09-25 17:48:05.609 D/DacPanel( 2992): native touch a=2 362,221
+09-25 17:48:05.624 D/DacPanel( 2992): native touch a=2 364,222
+09-25 17:48:05.639 D/DacPanel( 2992): native touch a=2 365,222
+09-25 17:48:05.655 D/DacPanel( 2992): native touch a=2 367,223
+09-25 17:48:05.671 D/DacPanel( 2992): native touch a=2 369,224
+09-25 17:48:05.692 D/DacPanel( 2992): native touch a=2 371,224
+09-25 17:48:05.760 D/DacPanel( 2992): native touch a=2 373,225
+09-25 17:48:05.766 D/DacPanel( 2992): native touch a=2 373,225
+09-25 17:48:05.799 D/DacPanel( 2992): native touch a=2 372,225
+09-25 17:48:05.814 D/DacPanel( 2992): native touch a=2 372,227
+09-25 17:48:05.830 D/DacPanel( 2992): native touch a=2 368,228
+09-25 17:48:05.846 D/DacPanel( 2992): native touch a=2 363,230
+09-25 17:48:05.862 D/DacPanel( 2992): native touch a=2 357,233
+09-25 17:48:05.883 D/DacPanel( 2992): native touch a=2 352,236
+09-25 17:48:05.894 D/DacPanel( 2992): native touch a=2 347,238
+09-25 17:48:05.910 D/DacPanel( 2992): native touch a=2 342,240
+09-25 17:48:05.922 D/DacPanel( 2992): native touch a=2 341,240
+09-25 17:48:05.923 D/DacPanel( 2992): native touch a=1 341,240
+09-25 17:48:06.380 D/DacPanel( 2992): native touch a=0 374,212
+09-25 17:48:06.398 D/DacPanel( 2992): [console] touch 187,106 on vol-track
+09-25 17:48:06.451 D/DacPanel( 2992): native touch a=2 352,220
+09-25 17:48:06.467 D/DacPanel( 2992): native touch a=2 342,222
+09-25 17:48:06.483 D/DacPanel( 2992): native touch a=2 329,224
+09-25 17:48:06.499 D/DacPanel( 2992): native touch a=2 315,226
+09-25 17:48:06.514 D/DacPanel( 2992): native touch a=2 297,228
+09-25 17:48:06.673 D/DacPanel( 2992): native touch a=2 208,240
+09-25 17:48:06.690 D/DacPanel( 2992): native touch a=2 203,241
+09-25 17:48:06.716 D/DacPanel( 2992): native touch a=2 196,242
+09-25 17:48:06.728 D/DacPanel( 2992): native touch a=2 193,242
+09-25 17:48:06.744 D/DacPanel( 2992): native touch a=2 189,243
+09-25 17:48:06.759 D/DacPanel( 2992): native touch a=2 188,243
+09-25 17:48:06.770 D/DacPanel( 2992): native touch a=2 185,243
+09-25 17:48:06.785 D/DacPanel( 2992): native touch a=2 184,244
+09-25 17:48:06.802 D/DacPanel( 2992): native touch a=2 183,244
+09-25 17:48:06.820 D/DacPanel( 2992): native touch a=2 182,244
+09-25 17:48:06.839 D/DacPanel( 2992): native touch a=2 181,244
+09-25 17:48:06.850 D/DacPanel( 2992): native touch a=2 180,244
+09-25 17:48:06.897 D/DacPanel( 2992): native touch a=2 179,244
+09-25 17:48:06.912 D/DacPanel( 2992): native touch a=2 178,244
+09-25 17:48:06.944 D/DacPanel( 2992): native touch a=2 179,245
+09-25 17:48:06.960 D/DacPanel( 2992): native touch a=2 184,246
+09-25 17:48:07.103 D/DacPanel( 2992): native touch a=2 223,252
+09-25 17:48:07.172 D/DacPanel( 2992): native touch a=2 230,253
+09-25 17:48:07.175 D/DacPanel( 2992): native touch a=1 230,253
+09-25 17:48:07.388 D/DacPanel( 2992): native touch a=0 313,200
+09-25 17:48:07.405 D/DacPanel( 2992): [console] touch 156,100 on vol-track
+09-25 17:48:07.426 D/DacPanel( 2992): native touch a=1 313,200
+09-25 17:48:07.909 D/DacPanel( 2992): native touch a=0 417,207
+09-25 17:48:07.924 D/DacPanel( 2992): [console] touch 209,103 on vol-track
+09-25 17:48:07.968 D/DacPanel( 2992): native touch a=1 417,207
+09-25 17:48:08.464 D/DacPanel( 2992): native touch a=0 456,230
+09-25 17:48:08.478 D/DacPanel( 2992): [console] touch 228,115 on vol-track
+09-25 17:48:08.545 D/DacPanel( 2992): native touch a=1 456,230
+09-25 17:48:08.985 D/DacPanel( 2992): native touch a=0 400,220
+09-25 17:48:09.001 D/DacPanel( 2992): [console] touch 200,110 on vol-track
+09-25 17:48:09.036 D/DacPanel( 2992): native touch a=1 400,220
+09-25 17:48:09.362 D/DacPanel( 2992): native touch a=0 222,226
+09-25 17:48:09.396 D/DacPanel( 2992): [console] touch 111,113 on volFill
+09-25 17:48:09.447 D/DacPanel( 2992): native touch a=1 222,226
+09-25 17:48:09.722 D/DacPanel( 2992): native touch a=0 153,206
+09-25 17:48:09.729 D/DacPanel( 2992): [console] touch 76,103 on volNum
+09-25 17:48:09.788 D/DacPanel( 2992): native touch a=1 153,206
+09-25 17:48:13.200 D/DacPanel( 2992): native touch a=0 646,1071
+09-25 17:48:13.208 D/DacPanel( 2992): [console] touch 323,536 on btnExit
+09-25 17:48:13.266 D/DacPanel( 2992): native touch a=1 646,1071
