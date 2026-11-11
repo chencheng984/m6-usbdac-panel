@@ -34,12 +34,24 @@ public class UsbDockService extends Service {
 
     private BroadcastReceiver receiver;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private int tick = 0;
 
     private final Runnable watcher = new Runnable() {
         @Override
         public void run() {
             try {
                 AlsaProbe.scan();
+
+                // 每约 5 秒打一次探测状态：DAC 模式下 adb 会断，这些日志
+                // 切回普通模式后可以回捞，用来判断「为什么不弹」。
+                if ((tick++ % 8) == 0) {
+                    android.util.Log.d("DacPanel", "probe cards=" + AlsaProbe.cardCount
+                            + " active=" + AlsaProbe.activeStreams
+                            + " fresh=" + State.alsaFresh()
+                            + " rate=" + State.alsaRate
+                            + " dismissed=" + State.userDismissed
+                            + " shown=" + PanelWindow.isShown());
+                }
 
                 // 会话状态机：
                 //  · ALSA 有流 = 进入一次 DAC 会话
@@ -90,9 +102,18 @@ public class UsbDockService extends Service {
                         boolean connected = intent.getBooleanExtra("connected", false);
                         boolean configured = intent.getBooleanExtra("configured", false);
                         String fn = intent.getStringExtra("usb_function");
+                        boolean wasConnected = State.usbConnected;
                         State.usbConnected = connected;
                         android.util.Log.d("DacPanel", "USB_STATE connected=" + connected
-                                + " configured=" + configured + " function=" + fn);
+                                + " configured=" + configured + " function=" + fn
+                                + " (was " + wasConnected + ")");
+                        if (connected && !wasConnected) {
+                            // USB 重新枚举（插拔、或从 MTP 切到 DAC 模式）：
+                            // 视为一次新会话，清掉「用户已关闭」标记，
+                            // 否则切模式后不会自动弹面板。
+                            State.userDismissed = false;
+                            State.dacSessionActive = false;
+                        }
                         if (connected) {
                             // USB 刚接上：立刻探一次 ALSA，不等下一个 600ms tick
                             AlsaProbe.scan();

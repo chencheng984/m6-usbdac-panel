@@ -18,8 +18,12 @@ import java.io.FileReader;
  */
 public final class AlsaProbe {
 
-    private static final String CARD = "/proc/asound/card0";
+    private static final String ASOUND = "/proc/asound";
     private static long lastProbeAt = 0L;
+
+    /** 诊断用：最近一次扫描看到的声卡数 / 活动流数 */
+    public static volatile int cardCount = 0;
+    public static volatile int activeStreams = 0;
 
     private AlsaProbe() {
     }
@@ -31,59 +35,75 @@ public final class AlsaProbe {
         }
         lastProbeAt = now;
 
-        File dir = new File(CARD);
-        if (!dir.isDirectory()) {
+        File root = new File(ASOUND);
+        String[] cards = root.isDirectory() ? root.list() : null;
+        if (cards == null) {
             State.alsaAvailable = false;
-            State.alsaError = "no " + CARD;
+            State.alsaError = "no " + ASOUND;
+            cardCount = 0;
             return;
         }
 
-        String[] names = dir.list();
-        if (names == null) {
-            State.alsaAvailable = false;
-            State.alsaError = "list denied";
-            return;
-        }
-
-        // 优先 capture 方向（USB DAC 模式下音频从 USB 流入），再取采样率最高者
+        // 遍历所有声卡：DAC 模式下 USB 声卡不一定是 card0（可能挂到 card1 以后），
+        // 只盯 card0 会漏掉正在播放的那一路，表现就是「切了 DAC 却不弹面板」。
         Hit bestCapture = null;
         Hit bestPlayback = null;
+        int seen = 0;
+        int active = 0;
 
-        for (String name : names) {
-            if (name == null || !name.startsWith("pcm")) {
+        for (String card : cards) {
+            if (card == null || !card.startsWith("card")) {
                 continue;
             }
-            File p = new File(CARD + "/" + name + "/sub0/hw_params");
-            if (!p.isFile() || !p.canRead()) {
+            File cardDir = new File(root, card);
+            if (!cardDir.isDirectory()) {
                 continue;
             }
-            String text = readSmall(p);
-            if (text == null) {
+            seen++;
+            String[] names = cardDir.list();
+            if (names == null) {
                 continue;
             }
-            String trimmed = text.trim();
-            if (trimmed.length() == 0 || trimmed.startsWith("closed")) {
-                continue;
-            }
-
-            double rate = parseRate(text);
-            int bits = parseBits(text);
-            int ch = parseChannels(text);
-            if (rate <= 0 || bits <= 0) {
-                continue;
-            }
-
-            Hit hit = new Hit(name, rate, bits, ch, parseFormatName(text));
-            if (name.endsWith("c")) {
-                if (bestCapture == null || hit.rate > bestCapture.rate) {
-                    bestCapture = hit;
+            for (String name : names) {
+                if (name == null || !name.startsWith("pcm")) {
+                    continue;
                 }
-            } else {
-                if (bestPlayback == null || hit.rate > bestPlayback.rate) {
-                    bestPlayback = hit;
+                File p = new File(cardDir, name + "/sub0/hw_params");
+                if (!p.isFile() || !p.canRead()) {
+                    continue;
+                }
+                String text = readSmall(p);
+                if (text == null) {
+                    continue;
+                }
+                String trimmed = text.trim();
+                if (trimmed.length() == 0 || trimmed.startsWith("closed")) {
+                    continue;
+                }
+
+                double rate = parseRate(text);
+                int bits = parseBits(text);
+                int ch = parseChannels(text);
+                if (rate <= 0 || bits <= 0) {
+                    continue;
+                }
+                active++;
+
+                Hit hit = new Hit(name, rate, bits, ch, parseFormatName(text));
+                if (name.endsWith("c")) {
+                    if (bestCapture == null || hit.rate > bestCapture.rate) {
+                        bestCapture = hit;
+                    }
+                } else {
+                    if (bestPlayback == null || hit.rate > bestPlayback.rate) {
+                        bestPlayback = hit;
+                    }
                 }
             }
         }
+
+        cardCount = seen;
+        activeStreams = active;
 
         Hit best = bestCapture != null ? bestCapture : bestPlayback;
 
