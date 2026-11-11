@@ -239,7 +239,8 @@
   height: 0%;
   background: linear-gradient(180deg, var(--accent-l) 0%, var(--accent) 100%);
   border-radius: 14px 14px 30px 30px;
-  transition: height 140ms ease, filter 160ms ease;
+  /* 与旋钮同一条曲线、同一时长：非拖动更新（快照刷新）时两者不会各走各的 */
+  transition: height 140ms cubic-bezier(0.2, 0.8, 0.3, 1), filter 160ms ease;
 }
 /* 拖动中必须 1:1 跟手：去掉高度过渡，任何滞后都会让条「粘不住」手指 */
 .volume.is-dragging .vol-fill {
@@ -288,9 +289,9 @@
   z-index: 3;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
   /* --knob-y 由 volume.js 逐帧写入；--over 是出界橡皮筋位移。
-     初始 148 = RAIL_H(176) - 旋钮(28)，即音量 0 的位置。 */
-  transform: translateY(var(--knob-y, 148px));
-  transition: transform 120ms linear, box-shadow 160ms ease;
+     初始 162 = RAIL_H(176) - 旋钮(28)/2 - 旋钮(28)/2，即音量 0 时中心在轨道底部。 */
+  transform: translateY(var(--knob-y, 162px));
+  transition: transform 140ms cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 160ms ease;
 }
 
 .vol-knob i {
@@ -312,7 +313,7 @@
  * 保证 1:1 跟手。 */
 .volume.is-dragging .vol-knob {
   transition: transform 160ms cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 160ms ease;
-  transform: translateY(var(--knob-y, 148px)) scale(1.18);
+  transform: translateY(var(--knob-y, 162px)) scale(1.18);
   box-shadow:
     0 0 0 5px rgba(255, 90, 31, 0.26),
     0 0 24px rgba(255, 90, 31, 0.55),

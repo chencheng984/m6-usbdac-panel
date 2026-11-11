@@ -121,7 +121,7 @@
     applyKnobY();
   }
 
-  /* 条形填充高度 = 音量比例；旋钮中心对齐填充顶端。
+  /* 条形填充高度 = 音量比例；旋钮中心严格落在填充顶端。
    * 旋钮位置走 transform（--knob-y）而不是 top：拖动时每帧只触发合成，
    * 不做布局重排，低端机上更跟手。 */
   function setBar(fraction) {
@@ -133,9 +133,10 @@
 
     fill.style.height = pct + '%';
 
+    // 不做 clamp：0% 时旋钮中心在轨道底部、100% 时在顶部，各自半悬在外。
+    // 之前 clamp 到 KNOB/2，两端各差 14px —— 就是「旋钮不跟条」的来源。
+    // 商用滑条（iOS 音量 HUD / Material Slider）都是 thumb 中心 = 填充末端。
     var center = RAIL_H * (1 - fraction);
-    if (center < KNOB / 2) center = KNOB / 2;
-    if (center > RAIL_H - KNOB / 2) center = RAIL_H - KNOB / 2;
     knobBase = center - KNOB / 2;
     applyKnobY();
 
@@ -241,8 +242,10 @@
     var v = fractionToValue(s.f);
     if (v === null) return;
 
-    // 本地先画：不等 store 往返，逐帧直接更新，手感才跟得上手指
-    setBar(s.f);
+    // 视觉直接吸附到「整数音量」的位置：系统回读的是整数，这样松手后
+    // 条和旋钮不会被回读值拽一下（商用滑条的 snap-to-step 做法）。
+    var shown = state.volume.max ? (v / state.volume.max) : s.f;
+    setBar(shown);
     if (lastNum !== String(v)) setNum(String(v));
 
     if (global.DacUI && global.DacUI.volumeApi) global.DacUI.volumeApi.requestVolume(v);
