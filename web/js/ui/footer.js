@@ -35,7 +35,8 @@
       lastCls = cls;
     }
 
-    var hint = s.hint || '';
+    // 画面保持简洁：不再显示提示语（hint 保留字段但不渲染）
+    var hint = '';
     if (hint !== lastHint) {
       elHint.textContent = hint;
       lastHint = hint;

@@ -113,16 +113,9 @@ public final class SnapshotBuilder {
             caps.put("volume", State.volumeMax > 0);
             root.put("caps", caps);
 
-            if (connected && !alsa && !a11y) {
-                JSONObject banner = new JSONObject();
-                banner.put("text", DacA11yService.isConnected()
-                        ? "已连接，等待山灵界面出现音频信息"
-                        : "请开启无障碍服务以读取山灵界面的采样率");
-                banner.put("level", "warn");
-                root.put("banner", banner);
-            } else {
-                root.put("banner", JSONObject.NULL);
-            }
+            // 画面保持简洁：不再下发普通提示横幅（"等待音频信息"这类）。
+            // 真正的异常由 try/catch 返回 link=error，界面用遮罩降级即可。
+            root.put("banner", JSONObject.NULL);
         } catch (Throwable ignored) {
             // 快照构建失败时返回尽量完整的空快照，界面自行降级
             try {

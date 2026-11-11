@@ -159,9 +159,9 @@
         overlay.className = 'overlay hidden';
       }
 
-      // 断开态由遮罩承担提示，横幅让位
+      // 断开态由遮罩承担提示；正常态不显示任何提示横幅，只有真错误才出横幅
       var showBanner = !(s.link === 'disconnected' || s.link === 'error') &&
-        !!(s.banner && s.banner.text);
+        !!(s.banner && s.banner.text && s.banner.level === 'error');
 
       if (showBanner) {
         bannerText.textContent = s.banner.text;
