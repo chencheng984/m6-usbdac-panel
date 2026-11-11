@@ -14,6 +14,7 @@
   var RAIL_H = 176;               // 轨道高度（px，与 components.css 对齐）
   var KNOB = 28;                  // 旋钮直径
   var OVER_MAX = 8;               // 橡皮筋最大位移（px）
+  var TRAVEL = RAIL_H - KNOB;     // 旋钮中心在轨道内的可用行程（148）
 
   var card = document.getElementById('volumeCard');
   var rail = document.getElementById('volRail');
@@ -121,9 +122,12 @@
     applyKnobY();
   }
 
-  /* 条形填充高度 = 音量比例；旋钮中心严格落在填充顶端。
-   * 旋钮位置走 transform（--knob-y）而不是 top：拖动时每帧只触发合成，
-   * 不做布局重排，低端机上更跟手。 */
+  /* 条形填充与旋钮严格联动。
+   *  · 两端各留半个旋钮：旋钮中心只走 KNOB/2 .. RAIL_H-KNOB/2，
+   *    这样 0% / 100% 时旋钮完整待在轨道里，不会凸出一截。
+   *  · 填充用 translateY 下移、超出轨道的部分被裁掉 —— 只走合成层，
+   *    不触发布局，拖动时不会卡。
+   */
   function setBar(fraction) {
     if (fraction < 0) fraction = 0;
     if (fraction > 1) fraction = 1;
@@ -131,12 +135,10 @@
     if (pct === lastPct) return;
     lastPct = pct;
 
-    fill.style.height = pct + '%';
+    var fillH = KNOB / 2 + fraction * TRAVEL;
+    fill.style.setProperty('--fill-y', (RAIL_H - fillH).toFixed(1) + 'px');
 
-    // 不做 clamp：0% 时旋钮中心在轨道底部、100% 时在顶部，各自半悬在外。
-    // 之前 clamp 到 KNOB/2，两端各差 14px —— 就是「旋钮不跟条」的来源。
-    // 商用滑条（iOS 音量 HUD / Material Slider）都是 thumb 中心 = 填充末端。
-    var center = RAIL_H * (1 - fraction);
+    var center = RAIL_H - fillH;      // 填充顶端 = 旋钮中心
     knobBase = center - KNOB / 2;
     applyKnobY();
 
