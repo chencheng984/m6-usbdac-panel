@@ -45,12 +45,15 @@ public class UsbDockService extends Service {
                 // 每约 5 秒打一次探测状态：DAC 模式下 adb 会断，这些日志
                 // 切回普通模式后可以回捞，用来判断「为什么不弹」。
                 if ((tick++ % 8) == 0) {
-                    android.util.Log.d("DacPanel", "probe cards=" + AlsaProbe.cardCount
+                    String msg = "probe cards=" + AlsaProbe.cardCount
                             + " active=" + AlsaProbe.activeStreams
                             + " fresh=" + State.alsaFresh()
                             + " rate=" + State.alsaRate
                             + " dismissed=" + State.userDismissed
-                            + " shown=" + PanelWindow.isShown());
+                            + " shown=" + PanelWindow.isShown()
+                            + " usb=" + State.usbConnected;
+                    android.util.Log.d("DacPanel", msg);
+                    Diag.write(msg);
                 }
 
                 // 会话状态机：
@@ -67,8 +70,11 @@ public class UsbDockService extends Service {
                 }
 
                 if (active && !State.userDismissed && !PanelWindow.isShown()) {
-                    android.util.Log.d("DacPanel", "auto show: rate=" + State.alsaRate
-                            + " plugged=" + State.plugged + " usb=" + State.usbConnected);
+                    String msg = "auto show: rate=" + State.alsaRate
+                            + " plugged=" + State.plugged + " usb=" + State.usbConnected
+                            + " cards=" + AlsaProbe.cardCount;
+                    android.util.Log.d("DacPanel", msg);
+                    Diag.write(msg);
                     PanelWindow.show(UsbDockService.this);
                 }
             } catch (Throwable ignored) {
@@ -85,6 +91,12 @@ public class UsbDockService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        // DAC 模式下 adb 会断，这里把私有目录挂上，关键状态落盘到 files/dac-diag.log，
+        // 切回普通模式后可以 run-as 捞出来（此前只有无障碍服务设置过 appDir，
+        // 无障碍没开时 Diag 写不进去）。
+        State.appDir = getFilesDir();
+        Diag.write("service onCreate");
+
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -107,6 +119,9 @@ public class UsbDockService extends Service {
                         android.util.Log.d("DacPanel", "USB_STATE connected=" + connected
                                 + " configured=" + configured + " function=" + fn
                                 + " (was " + wasConnected + ")");
+                        Diag.write("USB_STATE connected=" + connected
+                                + " configured=" + configured + " fn=" + fn
+                                + " was=" + wasConnected);
                         if (connected && !wasConnected) {
                             // USB 重新枚举（插拔、或从 MTP 切到 DAC 模式）：
                             // 视为一次新会话，清掉「用户已关闭」标记，
