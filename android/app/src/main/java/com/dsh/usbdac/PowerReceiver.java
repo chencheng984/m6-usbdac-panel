@@ -19,6 +19,20 @@ public class PowerReceiver extends BroadcastReceiver {
         try {
             String action = intent.getAction();
 
+            // 开机自启 / 应用更新后自启：把常驻服务拉起来，
+            // 否则重启设备后必须手动点一次图标，面板才不会自动弹出。
+            if (Intent.ACTION_BOOT_COMPLETED.equals(action)
+                    || "android.intent.action.MY_PACKAGE_REPLACED".equals(action)
+                    || "android.intent.action.QUICKBOOT_POWERON".equals(action)) {
+                android.util.Log.d("DacPanel", "boot-ish action: " + action);
+                Intent svc = new Intent(context, UsbDockService.class);
+                try {
+                    context.startService(svc);
+                } catch (Throwable ignored) {
+                }
+                return;
+            }
+
             if (Intent.ACTION_BATTERY_CHANGED.equals(action)) {
                 int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
                 State.plugged = (plugged & BatteryManager.BATTERY_PLUGGED_USB) != 0;

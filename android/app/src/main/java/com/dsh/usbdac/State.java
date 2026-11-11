@@ -15,6 +15,12 @@ public final class State {
     /** USB 数据连接（ACTION_USB_STATE connected，比供电更可靠地反映 DAC 接入） */
     public static volatile boolean usbConnected = false;
 
+    /** 当前是否处于一次「DAC 会话」中（ALSA 有流） */
+    public static volatile boolean dacSessionActive = false;
+
+    /** 本次会话里用户是否手动关过面板；直到 ALSA 流中断才重置，避免关了又立刻弹 */
+    public static volatile boolean userDismissed = false;
+
     /** 系统有音频活动（用于把"已连接"升级为"DAC 工作中"） */
     public static volatile boolean audioActive = false;
 

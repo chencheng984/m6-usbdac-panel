@@ -88,9 +88,13 @@ public final class PanelWindow {
                 }
             });
 
-            DacBridge bridge = new DacBridge(sCtx,                    new Runnable() {
+            DacBridge bridge = new DacBridge(sCtx,
+                    new Runnable() {
                         @Override
                         public void run() {
+                            // 用户主动关闭：标记本会话已关闭，否则 watchdog 会在
+                            // 600ms 后因为 ALSA 还有流而立刻把面板弹回来。
+                            State.userDismissed = true;
                             hide();
                         }
                     },

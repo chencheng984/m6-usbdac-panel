@@ -40,10 +40,21 @@ public class UsbDockService extends Service {
         public void run() {
             try {
                 AlsaProbe.scan();
-                // 触发条件只认「ALSA 有活动流」：这就是 USB DAC 模式的机械判据。
-                // 不再要求 State.plugged —— 实测 DAC 模式下供电广播并不总是带
-                // BATTERY_PLUGGED_USB 标志，会导致「开了 DAC 却不弹面板」。
-                if (!PanelWindow.isShown() && State.alsaFresh()) {
+
+                // 会话状态机：
+                //  · ALSA 有流 = 进入一次 DAC 会话
+                //  · ALSA 断流 = 会话结束，同时清掉「用户已关闭」标记
+                // 这样用户点退出后不会被 watchdog 立刻重新拉起，只有拔插/重连才会再弹。
+                boolean active = State.alsaFresh();
+                if (!active) {
+                    State.dacSessionActive = false;
+                    State.userDismissed = false;
+                } else if (!State.dacSessionActive) {
+                    State.dacSessionActive = true;
+                    State.userDismissed = false;
+                }
+
+                if (active && !State.userDismissed && !PanelWindow.isShown()) {
                     android.util.Log.d("DacPanel", "auto show: rate=" + State.alsaRate
                             + " plugged=" + State.plugged + " usb=" + State.usbConnected);
                     PanelWindow.show(UsbDockService.this);
