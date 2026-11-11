@@ -128,6 +128,53 @@ public final class AlsaProbe {
         State.alsaAt = now;
     }
 
+    /** 诊断用：当前 /proc/asound 的声卡清单（切 DAC 模式下 adb 会断，靠它事后判断） */
+    public static String snapshot() {
+        StringBuilder sb = new StringBuilder();
+        String cards = readFile(SASHOUND_CARDS);
+        sb.append("cards=").append(cards == null ? "null" : cards.replace('\n', '|').trim());
+        File root = new File(ASOUND);
+        String[] ls = root.isDirectory() ? root.list() : null;
+        if (ls != null) {
+            for (String n : ls) {
+                if (n == null || !n.startsWith("card") || n.equals("cards")) {
+                    continue;
+                }
+                String id = readFile(ASOUND + "/" + n + "/id");
+                sb.append(" ").append(n).append(":").append(id == null ? "?" : id.trim());
+            }
+        } else {
+            sb.append(" list=null");
+        }
+        return sb.toString();
+    }
+
+    private static final String SASHOUND_CARDS = "/proc/asound/cards";
+
+    private static String readFile(String path) {
+        java.io.BufferedReader br = null;
+        try {
+            br = new java.io.BufferedReader(new java.io.FileReader(path));
+            StringBuilder sb = new StringBuilder(160);
+            String line;
+            int n = 0;
+            while ((line = br.readLine()) != null && n < 12) {
+                sb.append(line).append('\n');
+                n++;
+            }
+            return sb.toString();
+        } catch (Throwable t) {
+            return null;
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+    }
+
     private static String readSmall(File f) {
         BufferedReader br = null;
         try {

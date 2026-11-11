@@ -54,6 +54,7 @@ public class UsbDockService extends Service {
                             + " usb=" + State.usbConnected;
                     android.util.Log.d("DacPanel", msg);
                     Diag.write(msg);
+                    Diag.write("  " + AlsaProbe.snapshot());
                 }
 
                 // 会话状态机：
@@ -119,9 +120,18 @@ public class UsbDockService extends Service {
                         android.util.Log.d("DacPanel", "USB_STATE connected=" + connected
                                 + " configured=" + configured + " function=" + fn
                                 + " (was " + wasConnected + ")");
+                        // 把 extras 全量落盘：判断 USB 到底切成了哪种功能
+                        // （fn 一直是 null，说明 usb_function 这个 key 在这台机器上不提供）
+                        StringBuilder ek = new StringBuilder();
+                        android.os.Bundle ex = intent.getExtras();
+                        if (ex != null) {
+                            for (String k : ex.keySet()) {
+                                ek.append(k).append('=').append(ex.get(k)).append(' ');
+                            }
+                        }
                         Diag.write("USB_STATE connected=" + connected
                                 + " configured=" + configured + " fn=" + fn
-                                + " was=" + wasConnected);
+                                + " was=" + wasConnected + " extras[" + ek + "]");
                         if (connected && !wasConnected) {
                             // USB 重新枚举（插拔、或从 MTP 切到 DAC 模式）：
                             // 视为一次新会话，清掉「用户已关闭」标记，
