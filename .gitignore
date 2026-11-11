@@ -15,3 +15,6 @@ android/captures/
 .DS_Store
 Thumbs.db
 desktop.ini
+.touch-log.txt
+.test-log.txt
+.auth-window.png
