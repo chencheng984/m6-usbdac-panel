@@ -265,6 +265,17 @@
   );
 }
 
+/* 方向探针：轨道音量 100 端的 1px 标记，只用于测量，不可见 */
+.vol-probe {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  margin-left: -0.5px;
+  pointer-events: none;
+}
+
 .vol-knob {
   position: absolute;
   left: 50%;

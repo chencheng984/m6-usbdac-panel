@@ -20,6 +20,7 @@
   var fill = document.getElementById('volFill');
   var knob = document.getElementById('volKnob');
   var needle = document.getElementById('volNeedle');
+  var probe = document.getElementById('volProbe');
   var volNum = document.getElementById('volNum');
 
   var state = null;
@@ -188,17 +189,41 @@
     }
   }
 
-  /* ---- 纵向拖拽 ---- */
-  function sampleFromY(clientY) {
-    var rect = rail.getBoundingClientRect();
-    if (!rect.height) return { f: 0, over: 0 };
-    var y = clientY - rect.top;
-    var raw = 1 - y / rect.height;
+  /* ---- 沿轨道拖拽 ----
+   * 竖屏时整页会被 rotate(90deg) 渲染，所以「视觉上下」并不等于页面坐标的 Y 轴。
+   * 这里不改旋转策略，而是用轨道「音量 100」端的探针实测方向，把手势
+   * 投影到轨道的长轴上——旋转多少度、缩放多少都成立。
+   */
+  function railAxis() {
+    var r = rail.getBoundingClientRect();
+    var p = probe.getBoundingClientRect();
+    var cx = r.left + r.width / 2;
+    var cy = r.top + r.height / 2;
+    var dx = (p.left + p.width / 2) - cx;
+    var dy = (p.top + p.height / 2) - cy;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    if (!(len > 0.5)) {
+      // 探针测不到时退化为「竖直向上」的保守方向
+      dx = 0;
+      dy = -1;
+      len = (r.height / 2) || 1;
+    }
+    return { cx: cx, cy: cy, dx: dx / len, dy: dy / len, half: len };
+  }
+
+  function sampleFromPointer(clientX, clientY) {
+    var a = railAxis();
+    // t = +1 在音量 100 端，t = -1 在 0 端
+    var t = ((clientX - a.cx) * a.dx + (clientY - a.cy) * a.dy) / a.half;
+
     var over = 0;
-    if (raw > 1) over = y - rect.height;      // 手指在轨道下方
-    else if (raw < 0) over = y;               // 手指在轨道上方
-    var f = raw < 0 ? 0 : (raw > 1 ? 1 : raw);
-    return { f: f, over: over };
+    if (t > 1) over = -(t - 1) * a.half;        // 越过 100 端：旋钮往 100 方向拉一点
+    else if (t < -1) over = (-1 - t) * a.half;  // 越过 0 端
+
+    var f = (t + 1) / 2;
+    if (f < 0) f = 0;
+    if (f > 1) f = 1;
+    return { f: f, over: over, t: t };
   }
 
   function fractionToValue(f) {
@@ -209,15 +234,15 @@
     return v;
   }
 
-  function applyPointer(clientY) {
-    var p = sampleFromY(clientY);
-    setOver(p.over);
+  function applyPointer(clientX, clientY) {
+    var s = sampleFromPointer(clientX, clientY);
+    setOver(s.over);
 
-    var v = fractionToValue(p.f);
+    var v = fractionToValue(s.f);
     if (v === null) return;
 
     // 本地先画：不等 store 往返，逐帧直接更新，手感才跟得上手指
-    setBar(p.f);
+    setBar(s.f);
     if (lastNum !== String(v)) setNum(String(v));
 
     if (global.DacUI && global.DacUI.volumeApi) global.DacUI.volumeApi.requestVolume(v);
@@ -227,24 +252,24 @@
     if (!state || !state.caps || !state.caps.volume) return;
 
     var p = e.touches ? e.touches[0] : e;
-    // 热区扩展到整张卡，但垂直方向仍只认轨道范围：
-    // 数字区域在轨道下方，若也算进来的话点数字会把音量直接点到 0。
-    var rect = rail.getBoundingClientRect();
-    if (p.clientY < rect.top - 10 || p.clientY > rect.bottom + 10) {
+    var s = sampleFromPointer(p.clientX, p.clientY);
+    // 热区扩到整张卡，但只接受沿轨道方向落在轨道附近的手势：
+    // 数字区域在轨道外侧，若也算进来，点数字会把音量直接打到 0。
+    if (s.t > 1.15 || s.t < -1.15) {
       return;
     }
 
     dragging = true;
     setDragging(true);
     haptic(8);
-    applyPointer(p.clientY);
+    applyPointer(p.clientX, p.clientY);
     if (e.preventDefault) e.preventDefault();
   }
 
   function onMove(e) {
     if (!dragging) return;
     var p = e.touches ? e.touches[0] : e;
-    applyPointer(p.clientY);
+    applyPointer(p.clientX, p.clientY);
     if (e.preventDefault) e.preventDefault();
   }
 

@@ -38,6 +38,10 @@
             <div id="volFill" class="vol-fill"></div>
             <div class="vol-ticks"></div>
           </div>
+          <!-- 方向探针：放在轨道的「音量 100」端。
+               整页在竖屏时会被 rotate(90deg)，靠它的实际屏幕位置反算手势方向，
+               不再依赖「上下」这种会随旋转变化的假设。 -->
+          <i id="volProbe" class="vol-probe" aria-hidden="true"></i>
           <div id="volKnob" class="vol-knob"><i id="volNeedle"></i></div>
         </div>
         <div class="vol-readout">
