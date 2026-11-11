@@ -122,11 +122,13 @@
     applyKnobY();
   }
 
-  /* 条形填充与旋钮严格联动。
-   *  · 两端各留半个旋钮：旋钮中心只走 KNOB/2 .. RAIL_H-KNOB/2，
-   *    这样 0% / 100% 时旋钮完整待在轨道里，不会凸出一截。
-   *  · 填充用 translateY 下移、超出轨道的部分被裁掉 —— 只走合成层，
-   *    不触发布局，拖动时不会卡。
+  /* 条形填充与旋钮严格联动，且填充必须铺满整条轨道：
+   *  · 填充：0% 无、100% 占满 176px
+   *  · 旋钮中心 = 填充顶端，所以两端时旋钮有一半在轨道外 —— 这是
+   *    「填充满 + 中心对齐」的几何必然（旋钮半径 14px）。参考图里
+   *    旋钮也是半嵌在胶囊顶端的。
+   *  · 两者行程完全相同（都是 176px），配合同一条 transition 曲线，
+   *    非拖动更新时同步到达，不会一个先到一个后到。
    */
   function setBar(fraction) {
     if (fraction < 0) fraction = 0;
@@ -135,7 +137,7 @@
     if (pct === lastPct) return;
     lastPct = pct;
 
-    var fillH = KNOB / 2 + fraction * TRAVEL;
+    var fillH = fraction * RAIL_H;
     fill.style.setProperty('--fill-y', (RAIL_H - fillH).toFixed(1) + 'px');
 
     var center = RAIL_H - fillH;      // 填充顶端 = 旋钮中心

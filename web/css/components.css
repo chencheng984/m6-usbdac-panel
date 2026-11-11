@@ -233,7 +233,7 @@
 
 /* 填充条：固定满高，用 translateY 下移露出所需长度。
  * 这样每帧只改 transform（合成层），不触发 layout，拖动更顺；
- * --fill-y 由 volume.js 逐帧写入，初始 162 对应音量 0（露出 KNOB/2 的圆头）。 */
+ * --fill-y 由 volume.js 逐帧写入，176 = 音量 0（完全隐藏）。 */
 .vol-fill {
   position: absolute;
   left: 0;
@@ -242,8 +242,8 @@
   height: 100%;
   background: linear-gradient(180deg, var(--accent-l) 0%, var(--accent) 100%);
   border-radius: 14px 14px 30px 30px;
-  transform: translateY(var(--fill-y, 162px));
-  /* 与旋钮同一条曲线、同一时长：非拖动更新时两者不会各走各的 */
+  transform: translateY(var(--fill-y, 176px));
+  /* 与旋钮完全同一条曲线、同一时长：两者不会一个先到、一个后到 */
   transition: transform 140ms cubic-bezier(0.2, 0.8, 0.3, 1), filter 160ms ease;
 }
 /* 拖动中必须 1:1 跟手：去掉高度过渡，任何滞后都会让条「粘不住」手指 */
